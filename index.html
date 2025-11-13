@@ -1,32 +1,43 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
+<html lang="pt-BR" class="dark"> <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinanceFlow 2.0 - Controle Financeiro Familiar</title>
+    <title>FinanceFlow 2.1 - Controle Financeiro Familiar</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Chart.js -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // Ativa o modo escuro via classe no HTML
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Playfair Display', 'serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Anime.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary-color: #14b8a6;
-            --primary-dark: #0d9488;
-            --primary-light: #2dd4bf;
+            --primary-color: #14b8a6; /* teal-500 */
+            --primary-dark: #0d9488; /* teal-600 */
+            --primary-light: #2dd4bf; /* teal-400 */
         }
         
+        /* [MUDANÇA] Fundo escuro */
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            background-color: #0f172a; /* slate-900 */
+            color: #cbd5e1; /* slate-300 */
             min-height: 100vh;
         }
         
@@ -40,11 +51,12 @@
         
         .card-hover:hover {
             transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            /* [MUDANÇA] Sombra mais sutil para dark mode */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
         
         .gradient-text {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -52,7 +64,7 @@
         .loading-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(15, 23, 42, 0.95); /* slate-900 com opacidade */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -78,7 +90,7 @@
         .modal {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7); /* Fundo do modal mais escuro */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -93,8 +105,10 @@
             visibility: visible;
         }
         
+        /* [MUDANÇA] Modal com fundo escuro */
         .modal-content {
-            background: white;
+            background: #1e293b; /* slate-800 */
+            border: 1px solid #334155; /* slate-700 */
             border-radius: 16px;
             padding: 2rem;
             max-width: 500px;
@@ -115,16 +129,19 @@
             padding: 0.75rem 1rem;
             margin: 0.25rem 0;
             cursor: pointer;
+            color: #94a3b8; /* slate-400 */
         }
         
+        /* [MUDANÇA] Estilos de hover e active do sidebar */
         .sidebar-item:hover {
             background: rgba(20, 184, 166, 0.1);
-            color: var(--primary-color);
+            color: var(--primary-light);
         }
         
         .sidebar-item.active {
             background: rgba(20, 184, 166, 0.1);
-            color: var(--primary-color);
+            color: var(--primary-light);
+            font-weight: 500;
             border-right: 3px solid var(--primary-color);
         }
         
@@ -134,23 +151,23 @@
         }
         
         .transaction-item:hover {
-            background: rgba(0, 0, 0, 0.02);
+            background: rgba(255, 255, 255, 0.02);
             transform: translateX(4px);
         }
         
         .transaction-item.receita {
-            border-left-color: #10b981;
+            border-left-color: #10b981; /* green-500 */
         }
         
         .transaction-item.despesa {
-            border-left-color: #ef4444;
+            border-left-color: #ef4444; /* red-500 */
         }
         
         .category-chip {
             display: inline-flex;
             align-items: center;
-            background: var(--primary-color);
-            color: white;
+            background: #334155; /* slate-700 */
+            color: #e2e8f0; /* slate-200 */
             padding: 0.25rem 0.75rem;
             border-radius: 9999px;
             font-size: 0.75rem;
@@ -182,24 +199,56 @@
                 right: 1rem;
             }
         }
+
+        /* [NOVO] Estilos para barra de progresso do cartão */
+        .progress-bar-bg {
+            background-color: #334155; /* slate-700 */
+            border-radius: 9999px;
+            overflow: hidden;
+            height: 8px;
+        }
+        .progress-bar-fg {
+            height: 100%;
+            background: var(--primary-color);
+            border-radius: 9999px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        /* [MUDANÇA] Estilos de input para dark mode */
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            background-color: #334155; /* slate-700 */
+            border: 1px solid #475569; /* slate-600 */
+            color: #f1f5f9; /* slate-100 */
+            border-radius: 8px;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus,
+        select:focus {
+            ring: 2px solid var(--primary-color);
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
     </style>
 </head>
-<body>
-    <!-- Loading Overlay -->
+<body class="text-slate-300">
     <div id="loading-overlay" class="loading-overlay">
         <div class="spinner"></div>
         <p class="text-white mt-4">Carregando FinanceFlow...</p>
     </div>
 
-    <!-- Auth Modal -->
     <div id="auth-modal" class="modal">
         <div class="modal-content">
             <div class="text-center">
                 <div class="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl mx-auto mb-6 flex items-center justify-center">
                     <span class="text-white font-bold text-xl">FF</span>
                 </div>
-                <h1 class="text-3xl font-display font-bold gradient-text mb-4">FinanceFlow 2.0</h1>
-                <p class="text-gray-600 mb-8">Controle financeiro familiar inteligente</p>
+                <h1 class="text-3xl font-display font-bold gradient-text mb-4">FinanceFlow 2.1</h1>
+                <p class="text-gray-400 mb-8">Controle financeiro familiar inteligente</p>
                 <button id="login-btn" class="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all duration-200 transform hover:scale-105">
                     Entrar com Google
                 </button>
@@ -208,21 +257,19 @@
         </div>
     </div>
 
-    <!-- Main App -->
     <div id="app" class="hidden min-h-screen">
-        <!-- Navigation -->
-        <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+        <nav class="bg-slate-800 shadow-sm border-b border-slate-700 sticky top-0 z-40">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16">
                     <div class="flex items-center space-x-3">
                         <div class="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
                             <span class="text-white font-bold text-sm">FF</span>
                         </div>
-                        <span class="font-display font-semibold text-xl text-gray-800">FinanceFlow 2.0</span>
+                        <span class="font-display font-semibold text-xl text-white">FinanceFlow 2.1</span>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <span id="user-name" class="text-gray-600 font-medium">Olá, Usuário</span>
-                        <button id="logout-btn" class="text-gray-500 hover:text-teal-600 transition-colors">
+                        <span id="user-name" class="text-gray-300 font-medium">Olá, Usuário</span>
+                        <button id="logout-btn" class="text-gray-400 hover:text-teal-500 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                             </svg>
@@ -233,8 +280,7 @@
         </nav>
 
         <div class="flex">
-            <!-- Sidebar -->
-            <div class="w-64 bg-white h-screen shadow-sm border-r border-gray-200 hidden lg:block">
+            <div class="w-64 bg-slate-800 h-screen shadow-sm border-r border-slate-700 hidden lg:block">
                 <div class="p-6">
                     <nav class="space-y-2">
                         <div class="sidebar-item active" data-section="dashboard">
@@ -245,28 +291,33 @@
                                 <span class="font-medium">Dashboard</span>
                             </div>
                         </div>
+                        <div class="sidebar-item" data-section="cards">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                                </svg>
+                                <span class="font-medium">Cartões de Crédito</span>
+                            </div>
+                        </div>
                     </nav>
                 </div>
             </div>
 
-            <!-- Main Content -->
             <div class="flex-1 p-6">
-                <!-- Dashboard Section -->
                 <div id="dashboard-section" class="space-y-8">
-                    <!-- Header -->
                     <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                         <div>
-                            <h1 class="font-display text-3xl font-bold text-gray-800 mb-2">Dashboard Financeiro</h1>
-                            <p class="text-gray-600">Visão geral completa das suas finanças familiares</p>
+                            <h1 class="font-display text-3xl font-bold text-white mb-2">Dashboard Financeiro</h1>
+                            <p class="text-gray-400">Visão geral completa das suas finanças familiares</p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button id="prev-month" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
+                            <button id="prev-month" class="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                                 </svg>
                             </button>
-                            <span id="current-month" class="font-semibold text-lg text-gray-700 w-40 text-center capitalize">Novembro 2024</span>
-                            <button id="next-month" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
+                            <span id="current-month" class="font-semibold text-lg text-gray-300 w-40 text-center capitalize">Novembro 2024</span>
+                            <button id="next-month" class="p-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
@@ -274,57 +325,53 @@
                         </div>
                     </div>
 
-                    <!-- Summary Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div class="card-hover bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                            <span class="text-gray-500 text-sm font-medium">Saldo Atual</span>
-                            <div id="saldo-value" class="text-2xl font-bold text-gray-800 my-2">R$ 0,00</div>
+                        <div class="card-hover bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-700">
+                            <span class="text-gray-400 text-sm font-medium">Saldo Atual</span>
+                            <div id="saldo-value" class="text-2xl font-bold text-white my-2">R$ 0,00</div>
                             <div class="text-xs text-gray-500">Atualizado agora</div>
                         </div>
 
-                        <div class="card-hover bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                            <span class="text-gray-500 text-sm font-medium">Receitas (Mês)</span>
-                            <div id="revenue-value" class="text-2xl font-bold text-green-600 my-2">R$ 0,00</div>
+                        <div class="card-hover bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-700">
+                            <span class="text-gray-400 text-sm font-medium">Receitas (Mês)</span>
+                            <div id="revenue-value" class="text-2xl font-bold text-green-500 my-2">R$ 0,00</div>
                             <div class="text-xs text-gray-500">Total do mês</div>
                         </div>
 
-                        <div class="card-hover bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                            <span class="text-gray-500 text-sm font-medium">Despesas (Mês)</span>
-                            <div id="expenses-value" class="text-2xl font-bold text-red-600 my-2">R$ 0,00</div>
+                        <div class="card-hover bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-700">
+                            <span class="text-gray-400 text-sm font-medium">Despesas (Mês)</span>
+                            <div id="expenses-value" class="text-2xl font-bold text-red-500 my-2">R$ 0,00</div>
                             <div class="text-xs text-gray-500">Total do mês</div>
                         </div>
 
-                        <div class="card-hover bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                            <span class="text-gray-500 text-sm font-medium">Economia (Mês)</span>
-                            <div id="savings-value" class="text-2xl font-bold text-teal-600 my-2">R$ 0,00</div>
+                        <div class="card-hover bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-700">
+                            <span class="text-gray-400 text-sm font-medium">Economia (Mês)</span>
+                            <div id="savings-value" class="text-2xl font-bold text-teal-500 my-2">R$ 0,00</div>
                             <div class="text-xs text-gray-500">Receitas - Despesas</div>
                         </div>
                     </div>
 
-                    <!-- Charts Row -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Receita vs Despesa</h3>
+                        <div class="bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-700">
+                            <h3 class="text-lg font-semibold text-gray-200 mb-4">Receita vs Despesa</h3>
                             <div style="position: relative; height: 300px;">
                                 <canvas id="revenue-expense-chart"></canvas>
                             </div>
                         </div>
 
-                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Gastos por Categoria</h3>
+                        <div class="bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-700">
+                            <h3 class="text-lg font-semibold text-gray-200 mb-4">Gastos por Categoria</h3>
                             <div style="position: relative; height: 300px;">
                                 <canvas id="category-chart"></canvas>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Content Grid -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <!-- Recent Transactions -->
-                        <div class="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                        <div class="lg:col-span-2 bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-700">
                             <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-lg font-semibold text-gray-800">Últimas Transações</h3>
-                                <button id="add-transaction-btn" class="text-teal-600 hover:text-teal-700 text-sm font-medium">
+                                <h3 class="text-lg font-semibold text-gray-200">Últimas Transações</h3>
+                                <button id="add-transaction-btn" class="text-teal-500 hover:text-teal-400 text-sm font-medium">
                                     + Adicionar
                                 </button>
                             </div>
@@ -335,39 +382,23 @@
                             </div>
                         </div>
 
-                        <!-- Sidebar Content -->
                         <div class="space-y-6">
-                            <!-- Quick Actions -->
-                            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                                <h3 class="text-lg font-semibold text-gray-800 mb-4">Ações Rápidas</h3>
+                            <div class="bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-700">
+                                <h3 class="text-lg font-semibold text-gray-200 mb-4">Ações Rápidas</h3>
                                 <div class="space-y-3">
-                                    <button id="post-recurring-btn" class="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium">
+                                    <button id="post-recurring-btn" class="w-full bg-slate-600 text-white py-2 px-4 rounded-lg hover:bg-slate-500 transition-colors text-sm font-medium">
                                         Lançar Recorrentes
                                     </button>
-                                    <button id="export-data-btn" class="w-full bg-blue-100 text-blue-700 py-2 px-4 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium">
+                                    <button id="export-data-btn" class="w-full bg-blue-900 text-blue-300 py-2 px-4 rounded-lg hover:bg-blue-800 transition-colors text-sm font-medium">
                                         Exportar Dados
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Credit Cards -->
-                            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                            <div class="bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-700">
                                 <div class="flex items-center justify-between mb-4">
-                                    <h3 class="text-lg font-semibold text-gray-800">Cartões</h3>
-                                    <button id="add-card-btn" class="text-teal-600 hover:text-teal-700 text-sm font-medium">
-                                        + Novo
-                                    </button>
-                                </div>
-                                <div id="cards-list" class="space-y-3">
-                                    <p class="text-sm text-gray-500">Nenhum cartão cadastrado</p>
-                                </div>
-                            </div>
-
-                            <!-- Categories -->
-                            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h3 class="text-lg font-semibold text-gray-800">Categorias</h3>
-                                    <button id="add-category-btn" class="text-teal-600 hover:text-teal-700 text-sm font-medium">
+                                    <h3 class="text-lg font-semibold text-gray-200">Categorias</h3>
+                                    <button id="add-category-btn" class="text-teal-500 hover:text-teal-400 text-sm font-medium">
                                         + Nova
                                     </button>
                                 </div>
@@ -378,11 +409,32 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="cards-section" class="hidden space-y-8">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                        <div>
+                            <h1 class="font-display text-3xl font-bold text-white mb-2">Gestão de Cartões</h1>
+                            <p class="text-gray-400">Acompanhe seus limites e gastos deste mês</p>
+                        </div>
+                        <button id="add-card-btn-main" class="bg-teal-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Novo Cartão
+                        </button>
+                    </div>
+
+                    <div id="cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="text-center py-8 text-gray-500 col-span-full">
+                            <p>Nenhum cartão cadastrado</p>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
-    <!-- Floating Action Button -->
     <div class="floating-action">
         <button id="fab-main" class="w-14 h-14 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 flex items-center justify-center">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -391,12 +443,11 @@
         </button>
     </div>
 
-    <!-- Add Transaction Modal -->
     <div id="transaction-modal" class="modal">
         <div class="modal-content">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-semibold text-gray-800">Adicionar Transação</h3>
-                <button id="close-transaction-modal" class="text-gray-400 hover:text-gray-600">
+                <h3 class="text-xl font-semibold text-gray-200">Adicionar Transação</h3>
+                <button id="close-transaction-modal" class="text-gray-500 hover:text-gray-300">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -404,49 +455,49 @@
             </div>
             <form id="transaction-form" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
-                    <input type="text" id="transaction-description" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Ex: Supermercado">
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Descrição</label>
+                    <input type="text" id="transaction-description" required class="w-full px-3 py-2" placeholder="Ex: Supermercado">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Valor</label>
-                        <input type="number" id="transaction-amount" step="0.01" min="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="0,00">
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Valor</label>
+                        <input type="number" id="transaction-amount" step="0.01" min="0.01" required class="w-full px-3 py-2" placeholder="0,00">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Data</label>
-                        <input type="date" id="transaction-date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Data</label>
+                        <input type="date" id="transaction-date" required class="w-full px-3 py-2">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
-                        <select id="transaction-type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Tipo</label>
+                        <select id="transaction-type" class="w-full px-3 py-2">
                             <option value="despesa">Despesa</option>
                             <option value="receita">Receita</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
-                        <select id="transaction-category" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Categoria</label>
+                        <select id="transaction-category" required class="w-full px-3 py-2">
                             <option value="">Selecione...</option>
                         </select>
                     </div>
                 </div>
                 <div id="payment-method-container">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Método de Pagamento</label>
-                    <select id="transaction-payment-method" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Método de Pagamento</label>
+                    <select id="transaction-payment-method" class="w-full px-3 py-2">
                         <option value="conta">Conta/Dinheiro</option>
                     </select>
                 </div>
                 <div id="installments-container" class="hidden">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Parcelas</label>
-                    <input type="number" id="transaction-installments" min="1" max="24" value="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Parcelas</label>
+                    <input type="number" id="transaction-installments" min="1" max="24" value="1" class="w-full px-3 py-2">
                 </div>
                 <div class="flex space-x-3 pt-4">
                     <button type="submit" class="flex-1 bg-teal-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-teal-700 transition-colors">
                         Adicionar
                     </button>
-                    <button type="button" id="cancel-transaction" class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-400 transition-colors">
+                    <button type="button" id="cancel-transaction" class="flex-1 bg-slate-600 text-gray-300 py-2 px-4 rounded-lg font-medium hover:bg-slate-500 transition-colors">
                         Cancelar
                     </button>
                 </div>
@@ -454,12 +505,11 @@
         </div>
     </div>
 
-    <!-- Add Category Modal -->
     <div id="category-modal" class="modal">
         <div class="modal-content">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-semibold text-gray-800">Nova Categoria</h3>
-                <button id="close-category-modal" class="text-gray-400 hover:text-gray-600">
+                <h3 class="text-xl font-semibold text-gray-200">Nova Categoria</h3>
+                <button id="close-category-modal" class="text-gray-500 hover:text-gray-300">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -467,14 +517,14 @@
             </div>
             <form id="category-form" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Nome da Categoria</label>
-                    <input type="text" id="category-name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Ex: Alimentação">
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Nome da Categoria</label>
+                    <input type="text" id="category-name" required class="w-full px-3 py-2" placeholder="Ex: Alimentação">
                 </div>
                 <div class="flex space-x-3 pt-4">
                     <button type="submit" class="flex-1 bg-teal-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-teal-700 transition-colors">
                         Criar
                     </button>
-                    <button type="button" id="cancel-category" class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-400 transition-colors">
+                    <button type="button" id="cancel-category" class="flex-1 bg-slate-600 text-gray-300 py-2 px-4 rounded-lg font-medium hover:bg-slate-500 transition-colors">
                         Cancelar
                     </button>
                 </div>
@@ -482,12 +532,11 @@
         </div>
     </div>
 
-    <!-- Add Card Modal -->
     <div id="card-modal" class="modal">
         <div class="modal-content">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-semibold text-gray-800">Adicionar Cartão</h3>
-                <button id="close-card-modal" class="text-gray-400 hover:text-gray-600">
+                <h3 class="text-xl font-semibold text-gray-200">Adicionar Cartão</h3>
+                <button id="close-card-modal" class="text-gray-500 hover:text-gray-300">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -495,24 +544,24 @@
             </div>
             <form id="card-form" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Cartão</label>
-                    <input type="text" id="card-name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Ex: Nubank">
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Nome do Cartão</label>
+                    <input type="text" id="card-name" required class="w-full px-3 py-2" placeholder="Ex: Nubank">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Dia de Fechamento</label>
-                        <input type="number" id="card-closing-day" min="1" max="31" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="15">
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Dia de Fechamento</label>
+                        <input type="number" id="card-closing-day" min="1" max="31" required class="w-full px-3 py-2" placeholder="15">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Limite (R$)</label>
-                        <input type="number" id="card-limit" step="0.01" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="10000">
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Limite (R$)</label>
+                        <input type="number" id="card-limit" step="0.01" min="0" class="w-full px-3 py-2" placeholder="10000">
                     </div>
                 </div>
                 <div class="flex space-x-3 pt-4">
                     <button type="submit" class="flex-1 bg-teal-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-teal-700 transition-colors">
                         Adicionar
                     </button>
-                    <button type="button" id="cancel-card" class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-400 transition-colors">
+                    <button type="button" id="cancel-card" class="flex-1 bg-slate-600 text-gray-300 py-2 px-4 rounded-lg font-medium hover:bg-slate-500 transition-colors">
                         Cancelar
                     </button>
                 </div>
@@ -556,6 +605,7 @@
             }
             
             async initializeFirebase() {
+                // [IMPORTANTE] Substitua com sua própria configuração do Firebase
                 const firebaseConfig = {
                     apiKey: "AIzaSyAcNVoZwadbi2_p9MnuAR1XGdLHK3ojrwA",
                     authDomain: "fin-app-a047e.firebaseapp.com",
@@ -590,9 +640,14 @@
             attachRealtimeListeners() {
                 this.detachListeners();
                 
+                // [MUDANÇA] Referências agora baseadas no this.userId para segurança
+                // Você deve ajustar suas Regras de Segurança do Firestore para (allow read, write: if request.auth.uid == resource.data.userId;)
                 const categoriesRef = collection(this.db, 'financeflow-categories');
                 const transactionsRef = collection(this.db, 'financeflow-transactions');
                 const cardsRef = collection(this.db, 'financeflow-cards');
+                
+                // Ajuste as queries para filtrar por userId se suas regras de segurança exigirem
+                // Ex: query(categoriesRef, where('userId', '==', this.userId))
                 
                 this.unsubscribers.push(
                     onSnapshot(query(categoriesRef), (snapshot) => {
@@ -617,7 +672,9 @@
                 this.unsubscribers.push(
                     onSnapshot(query(cardsRef), (snapshot) => {
                         this.cards = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        this.renderCards();
+                        // [MUDANÇA] Função renderCards foi dividida
+                        this.renderPaymentMethods();
+                        this.renderCardsSection(); 
                     }, (error) => {
                         console.error('Erro ao carregar cartões:', error);
                         this.showError('Erro ao carregar cartões');
@@ -637,6 +694,12 @@
                 document.getElementById('prev-month').addEventListener('click', () => this.changeMonth(-1));
                 document.getElementById('next-month').addEventListener('click', () => this.changeMonth(1));
                 
+                // Navegação por seções
+                document.querySelectorAll('.sidebar-item').forEach(item => {
+                    item.addEventListener('click', (e) => this.handleSectionChange(e));
+                });
+                
+                // Modais de Adição
                 document.getElementById('fab-main').addEventListener('click', () => this.showTransactionModal());
                 document.getElementById('add-transaction-btn').addEventListener('click', () => this.showTransactionModal());
                 document.getElementById('close-transaction-modal').addEventListener('click', () => this.hideTransactionModal());
@@ -648,11 +711,13 @@
                 document.getElementById('cancel-category').addEventListener('click', () => this.hideCategoryModal());
                 document.getElementById('category-form').addEventListener('submit', (e) => this.handleCategorySubmit(e));
                 
-                document.getElementById('add-card-btn').addEventListener('click', () => this.showCardModal());
+                // [MUDANÇA] Novo botão para adicionar cartão
+                document.getElementById('add-card-btn-main').addEventListener('click', () => this.showCardModal()); 
                 document.getElementById('close-card-modal').addEventListener('click', () => this.hideCardModal());
                 document.getElementById('cancel-card').addEventListener('click', () => this.hideCardModal());
                 document.getElementById('card-form').addEventListener('submit', (e) => this.handleCardSubmit(e));
                 
+                // Controles do formulário de transação
                 document.getElementById('transaction-type').addEventListener('change', (e) => this.handleTransactionTypeChange(e));
                 document.getElementById('transaction-payment-method').addEventListener('change', (e) => this.handlePaymentMethodChange(e));
                 
@@ -663,6 +728,27 @@
                         if (e.target === modal) this.hideAllModals();
                     });
                 });
+            }
+
+            // [NOVO] Lógica para navegação no sidebar
+            handleSectionChange(e) {
+                const item = e.currentTarget;
+                const section = item.dataset.section;
+
+                if (!section) return;
+
+                // Esconde todas as seções
+                document.getElementById('dashboard-section').classList.add('hidden');
+                document.getElementById('cards-section').classList.add('hidden');
+
+                // Desativa todos os itens do sidebar
+                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+
+                // Mostra a seção selecionada
+                document.getElementById(`${section}-section`).classList.remove('hidden');
+                
+                // Ativa o item do sidebar selecionado
+                item.classList.add('active');
             }
             
             async handleLogin() {
@@ -683,6 +769,9 @@
                     try {
                         await signOut(this.auth);
                         this.detachListeners();
+                        // [MUDANÇA] Mostra o modal de auth ao sair
+                        document.getElementById('app').classList.add('hidden');
+                        this.showAuthModal();
                     } catch (error) {
                         console.error('Erro ao sair:', error);
                         this.showError('Erro ao sair');
@@ -723,40 +812,89 @@
                 });
             }
             
-            renderCards() {
-                const cardsList = document.getElementById('cards-list');
+            // [NOVO] Função separada para popular o <select> de pagamento
+            renderPaymentMethods() {
                 const paymentMethodSelect = document.getElementById('transaction-payment-method');
-                
-                cardsList.innerHTML = '';
                 paymentMethodSelect.innerHTML = '<option value="conta">Conta/Dinheiro</option>';
-                
-                if (this.cards.length === 0) {
-                    cardsList.innerHTML = '<p class="text-sm text-gray-500">Nenhum cartão cadastrado</p>';
-                    return;
-                }
-                
+
                 this.cards.forEach(card => {
-                    const cardElement = document.createElement('div');
-                    cardElement.className = 'bg-gray-50 p-3 rounded-lg';
-                    cardElement.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <div class="font-medium text-gray-800">${card.name}</div>
-                                <div class="text-sm text-gray-500">Fecha dia ${card.closingDay}</div>
-                            </div>
-                            <button class="text-red-500 text-xs hover:text-red-700" data-id="${card.id}">Remover</button>
-                        </div>
-                    `;
-                    cardsList.appendChild(cardElement);
-                    
-                    cardElement.querySelector('button').addEventListener('click', () => {
-                        this.deleteCard(card.id);
-                    });
-                    
                     const option = document.createElement('option');
                     option.value = card.id;
                     option.textContent = card.name;
                     paymentMethodSelect.appendChild(option);
+                });
+            }
+
+            // [NOVO] Função para renderizar a nova seção de cartões
+            renderCardsSection() {
+                const cardsGrid = document.getElementById('cards-grid');
+                cardsGrid.innerHTML = '';
+
+                if (this.cards.length === 0) {
+                    cardsGrid.innerHTML = '<p class="text-sm text-gray-500 col-span-full text-center">Nenhum cartão cadastrado. Adicione um!</p>';
+                    return;
+                }
+
+                const currentMonth = this.currentDate.getMonth();
+                const currentYear = this.currentDate.getFullYear();
+
+                this.cards.forEach(card => {
+                    // Calcula gastos do cartão no mês atual
+                    const cardExpenses = this.transactions.filter(t => {
+                        const transactionDate = new Date(t.date + 'T00:00:00');
+                        return t.type === 'despesa' &&
+                               t.creditCardId === card.id &&
+                               transactionDate.getMonth() === currentMonth &&
+                               transactionDate.getFullYear() === currentYear;
+                    });
+
+                    const totalSpent = cardExpenses.reduce((sum, t) => sum + t.amount, 0);
+                    const limit = card.limit || 0;
+                    let progress = 0;
+                    if (limit > 0) {
+                        progress = (totalSpent / limit) * 100;
+                    }
+
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-700 space-y-4';
+                    
+                    cardElement.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-bold text-lg text-white">${card.name}</div>
+                                <div class="text-sm text-gray-400">Fecha dia ${card.closingDay}</div>
+                            </div>
+                            <button class="text-red-500 text-xs hover:text-red-400" data-id="${card.id}">Remover</button>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-400">Gasto:</span>
+                                <span class="font-medium text-white">${this.formatCurrency(totalSpent)}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-400">Limite:</span>
+                                <span class="font-medium text-gray-300">${this.formatCurrency(limit)}</span>
+                            </div>
+                        </div>
+
+                        ${limit > 0 ? `
+                        <div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fg" style="width: ${progress > 100 ? 100 : progress}%"></div>
+                            </div>
+                            <div class="text-xs text-gray-500 text-right mt-1">
+                                ${progress.toFixed(0)}% do limite usado
+                            </div>
+                        </div>
+                        ` : '<div class="text-xs text-gray-500">Limite não definido.</div>'}
+                    `;
+                    
+                    cardsGrid.appendChild(cardElement);
+                    
+                    cardElement.querySelector('button').addEventListener('click', () => {
+                        this.deleteCard(card.id);
+                    });
                 });
             }
             
@@ -765,7 +903,7 @@
                 const currentYear = this.currentDate.getFullYear();
                 
                 const monthTransactions = this.transactions.filter(t => {
-                    const transactionDate = new Date(t.date + 'T00:00:00');
+                    const transactionDate = new Date(t.date + 'T00:00:00'); // Garante data local
                     return transactionDate.getMonth() === currentMonth && 
                            transactionDate.getFullYear() === currentYear;
                 });
@@ -781,9 +919,13 @@
                     }
                 });
                 
-                const totalBalance = totalRevenue - totalExpenses;
-                
-                document.getElementById('saldo-value').textContent = this.formatCurrency(totalBalance);
+                const totalBalance = this.transactions.reduce((acc, t) => {
+                    return t.type === 'receita' ? acc + t.amount : acc - t.amount;
+                }, 0);
+
+                // [MUDANÇA] Saldo atual é o balanço total, não apenas do mês.
+                // Saldo do Mês (Economia) é Receitas - Despesas do mês.
+                document.getElementById('saldo-value').textContent = this.formatCurrency(totalBalance); 
                 document.getElementById('revenue-value').textContent = this.formatCurrency(totalRevenue);
                 document.getElementById('expenses-value').textContent = this.formatCurrency(totalExpenses);
                 document.getElementById('savings-value').textContent = this.formatCurrency(totalRevenue - totalExpenses);
@@ -793,6 +935,9 @@
                 
                 this.renderTransactionsList(monthTransactions);
                 this.updateCharts(totalRevenue, totalExpenses, monthTransactions);
+
+                // [NOVO] Atualiza a seção de cartões, pois os gastos podem ter mudado
+                this.renderCardsSection();
             }
             
             renderTransactionsList(transactions) {
@@ -811,15 +956,15 @@
                     const card = this.cards.find(c => c.id === transaction.creditCardId);
                     
                     const transactionElement = document.createElement('div');
-                    transactionElement.className = `transaction-item ${transaction.type} p-4 border-b border-gray-100 last:border-b-0`;
+                    transactionElement.className = `transaction-item ${transaction.type} p-4 border-b border-slate-700 last:border-b-0`;
                     
                     const sign = transaction.type === 'receita' ? '+' : '-';
-                    const colorClass = transaction.type === 'receita' ? 'text-green-600' : 'text-red-600';
+                    const colorClass = transaction.type === 'receita' ? 'text-green-500' : 'text-red-500';
                     
                     transactionElement.innerHTML = `
                         <div class="flex justify-between items-start">
                             <div class="flex-1">
-                                <div class="font-medium text-gray-800">${transaction.description}</div>
+                                <div class="font-medium text-gray-200">${transaction.description}</div>
                                 <div class="text-sm text-gray-500 mt-1">
                                     ${this.formatDate(transaction.date)} • ${category?.name || 'Sem categoria'}
                                     ${card ? ` • ${card.name}` : ''}
@@ -829,7 +974,7 @@
                                 <div class="font-semibold ${colorClass}">
                                     ${sign} ${this.formatCurrency(transaction.amount)}
                                 </div>
-                                <button class="text-gray-400 hover:text-red-500 text-sm mt-1" data-id="${transaction.id}">
+                                <button class="text-gray-500 hover:text-red-500 text-sm mt-1" data-id="${transaction.id}">
                                     Remover
                                 </button>
                             </div>
@@ -857,9 +1002,10 @@
                     data: {
                         labels: ['Receitas', 'Despesas'],
                         datasets: [{
-                            data: [revenue, expenses],
+                            data: [revenue || 0.1, expenses || 0.1], // Evita gráfico vazio
                             backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(239, 68, 68, 0.8)'],
-                            borderWidth: 2
+                            borderColor: '#1e293b', // slate-800
+                            borderWidth: 3
                         }]
                     },
                     options: {
@@ -867,7 +1013,10 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: 'bottom'
+                                position: 'bottom',
+                                labels: {
+                                    color: '#94a3b8' // slate-400
+                                }
                             }
                         }
                     }
@@ -907,7 +1056,15 @@
                                 legend: { display: false }
                             },
                             scales: {
-                                x: { beginAtZero: true }
+                                x: { 
+                                    beginAtZero: true,
+                                    ticks: { color: '#94a3b8' },
+                                    grid: { color: '#334155' }
+                                },
+                                y: {
+                                    ticks: { color: '#94a3b8' },
+                                    grid: { color: '#334155' }
+                                }
                             }
                         }
                     });
@@ -916,7 +1073,7 @@
             
             initializeCharts() {
                 document.getElementById('transaction-date').value = new Date().toISOString().split('T')[0];
-                Chart.defaults.color = '#6b7280';
+                Chart.defaults.color = '#94a3b8'; // slate-400
             }
             
             showTransactionModal() {
@@ -976,8 +1133,8 @@
                         date,
                         type,
                         categoryId,
-                        creditCardId: paymentMethod !== 'conta' ? paymentMethod : null,
-                        userId: this.userId,
+                        creditCardId: (type === 'despesa' && paymentMethod !== 'conta') ? paymentMethod : null,
+                        userId: this.userId, // [MUDANÇA] Adiciona userId
                         createdAt: new Date().toISOString()
                     };
                     
@@ -1000,7 +1157,7 @@
                 const batch = writeBatch(this.db);
                 const totalAmount = transactionData.amount;
                 const installmentAmount = Math.floor((totalAmount / installments) * 100) / 100;
-                const lastInstallment = totalAmount - (installmentAmount * (installments - 1));
+                const firstInstallmentAmount = totalAmount - (installmentAmount * (installments - 1)); // O primeiro é maior
                 
                 const [year, month, day] = transactionData.date.split('-').map(Number);
                 const baseDate = new Date(year, month - 1, day);
@@ -1012,7 +1169,7 @@
                     const installmentTransaction = {
                         ...transactionData,
                         description: `${transactionData.description} (${i + 1}/${installments})`,
-                        amount: i === installments - 1 ? lastInstallment : installmentAmount,
+                        amount: i === 0 ? firstInstallmentAmount : installmentAmount, // Ajustado
                         date: installmentDate.toISOString().split('T')[0]
                     };
                     
@@ -1036,7 +1193,7 @@
                 try {
                     await addDoc(collection(this.db, 'financeflow-categories'), {
                         name: categoryName,
-                        userId: this.userId,
+                        userId: this.userId, // [MUDANÇA] Adiciona userId
                         createdAt: new Date().toISOString()
                     });
                     
@@ -1066,7 +1223,7 @@
                         name: cardName,
                         closingDay,
                         limit,
-                        userId: this.userId,
+                        userId: this.userId, // [MUDANÇA] Adiciona userId
                         createdAt: new Date().toISOString()
                     });
                     
@@ -1087,6 +1244,8 @@
                     paymentMethodContainer.style.display = 'block';
                 } else {
                     paymentMethodContainer.style.display = 'none';
+                    // Esconde parcelas se for receita
+                    document.getElementById('transaction-payment-method').value = 'conta';
                     document.getElementById('installments-container').classList.add('hidden');
                 }
             }
@@ -1100,6 +1259,7 @@
                     installmentsContainer.classList.remove('hidden');
                 } else {
                     installmentsContainer.classList.add('hidden');
+                    document.getElementById('transaction-installments').value = 1;
                 }
             }
             
@@ -1109,7 +1269,8 @@
                 try {
                     await deleteDoc(doc(this.db, 'financeflow-transactions', id));
                     this.showSuccess('Transação removida!');
-                } catch (error) {
+                } catch (error)
+ {
                     console.error('Erro ao remover transação:', error);
                     this.showError('Erro ao remover transação');
                 }
@@ -1118,6 +1279,13 @@
             async deleteCategory(id) {
                 if (!confirm('Remover esta categoria?')) return;
                 
+                // [MUDANÇA] Verifica se a categoria está em uso
+                const isUsed = this.transactions.some(t => t.categoryId === id);
+                if (isUsed) {
+                    this.showError('Não é possível remover. Categoria em uso por transações.');
+                    return;
+                }
+
                 try {
                     await deleteDoc(doc(this.db, 'financeflow-categories', id));
                     this.showSuccess('Categoria removida!');
@@ -1130,6 +1298,13 @@
             async deleteCard(id) {
                 if (!confirm('Remover este cartão?')) return;
                 
+                // [MUDANÇA] Verifica se o cartão está em uso
+                const isUsed = this.transactions.some(t => t.creditCardId === id);
+                if (isUsed) {
+                    this.showError('Não é possível remover. Cartão em uso por transações.');
+                    return;
+                }
+
                 try {
                     await deleteDoc(doc(this.db, 'financeflow-cards', id));
                     this.showSuccess('Cartão removido!');
@@ -1147,12 +1322,13 @@
             }
             
             formatDate(date) {
+                // Adiciona T00:00:00 para garantir que a data seja interpretada como local
                 return new Intl.DateTimeFormat('pt-BR').format(new Date(date + 'T00:00:00'));
             }
             
             changeMonth(direction) {
                 this.currentDate.setMonth(this.currentDate.getMonth() + direction);
-                this.updateDashboard();
+                this.updateDashboard(); // O updateDashboard já atualiza os cartões
             }
             
             exportData() {
@@ -1208,10 +1384,11 @@
             
             showNotification(message, type = 'info') {
                 const notification = document.createElement('div');
-                notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform translate-x-full transition-transform duration-300 ${
-                    type === 'error' ? 'bg-red-500 text-white' :
-                    type === 'success' ? 'bg-green-500 text-white' :
-                    'bg-blue-500 text-white'
+                // [MUDANÇA] Notificação escura
+                notification.className = `fixed top-4 right-4 z-[1001] p-4 rounded-lg shadow-lg max-w-sm transform translate-x-full transition-transform duration-300 ${
+                    type === 'error' ? 'bg-red-600 text-white' :
+                    type === 'success' ? 'bg-green-600 text-white' :
+                    'bg-blue-600 text-white'
                 }`;
                 notification.textContent = message;
                 
@@ -1222,9 +1399,11 @@
                 }, 100);
                 
                 setTimeout(() => {
-                    notification.style.transform = 'translateX(100%)';
+                    notification.style.transform = 'translateX(110%)';
                     setTimeout(() => {
-                        document.body.removeChild(notification);
+                        if (document.body.contains(notification)) {
+                            document.body.removeChild(notification);
+                        }
                     }, 300);
                 }, 3000);
             }
