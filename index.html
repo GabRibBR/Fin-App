@@ -220,6 +220,10 @@
             color: #f1f5f9; /* slate-100 */
             border-radius: 8px;
         }
+        input:disabled {
+            background-color: #475569; /* slate-600 */
+            cursor: not-allowed;
+        }
         input[type="text"]:focus,
         input[type="number"]:focus,
         input[type="date"]:focus,
@@ -418,7 +422,7 @@
                     <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                         <div>
                             <h1 class="font-display text-3xl font-bold text-white mb-2">Gestão de Cartões</h1>
-                            <p class="text-gray-400">Acompanhe seus limites e gastos deste mês</p>
+                            <p class="text-gray-400">Acompanhe seus limites e gastos da fatura atual</p>
                         </div>
                         <button id="add-card-btn-main" class="bg-teal-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -642,7 +646,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, deleteDoc, onSnapshot, query, where, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, deleteDoc, onSnapshot, query, where, writeBatch, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         class FinanceFlowV2 {
             constructor() {
@@ -654,7 +658,7 @@
                 this.categories = [];
                 this.transactions = [];
                 this.cards = [];
-                this.recurring = []; // [NOVO] Array para transações recorrentes
+                this.recurring = [];
                 
                 this.currentDate = new Date();
                 this.charts = {};
@@ -681,7 +685,7 @@
                     apiKey: "AIzaSyAcNVoZwadbi2_p9MnuAR1XGdLHK3ojrwA",
                     authDomain: "fin-app-a047e.firebaseapp.com",
                     projectId: "fin-app-a047e",
-                    storageBucket: "fin-app-a047e.firebasestorage.app",
+                    storageBucket: "fin-app-a047e.appspot.com",
                     messagingSenderId: "71602249538",
                     appId: "1:71602249538:web:26bf252807bd5ee61132db"
                 };
@@ -711,12 +715,10 @@
             attachRealtimeListeners() {
                 this.detachListeners();
                 
-                // [MUDANÇA] Todas as queries agora filtram por userId
-                // Lembre-se de criar as Regras de Segurança no Firestore!
                 const categoriesRef = query(collection(this.db, 'financeflow-categories'), where('userId', '==', this.userId));
                 const transactionsRef = query(collection(this.db, 'financeflow-transactions'), where('userId', '==', this.userId));
                 const cardsRef = query(collection(this.db, 'financeflow-cards'), where('userId', '==', this.userId));
-                const recurringRef = query(collection(this.db, 'financeflow-recurring'), where('userId', '==', this.userId)); // [NOVO]
+                const recurringRef = query(collection(this.db, 'financeflow-recurring'), where('userId', '==', this.userId));
 
                 this.unsubscribers.push(
                     onSnapshot(categoriesRef, (snapshot) => {
@@ -740,7 +742,6 @@
                     }, (error) => console.error('Erro ao carregar cartões:', error))
                 );
 
-                // [NOVO] Listener para recorrentes
                 this.unsubscribers.push(
                     onSnapshot(recurringRef, (snapshot) => {
                         this.recurring = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -761,12 +762,10 @@
                 document.getElementById('prev-month').addEventListener('click', () => this.changeMonth(-1));
                 document.getElementById('next-month').addEventListener('click', () => this.changeMonth(1));
                 
-                // Navegação por seções
                 document.querySelectorAll('.sidebar-item').forEach(item => {
                     item.addEventListener('click', (e) => this.handleSectionChange(e));
                 });
                 
-                // Modais de Adição
                 document.getElementById('fab-main').addEventListener('click', () => this.showTransactionModal());
                 document.getElementById('add-transaction-btn').addEventListener('click', () => this.showTransactionModal());
                 document.getElementById('close-transaction-modal').addEventListener('click', () => this.hideTransactionModal());
@@ -783,13 +782,11 @@
                 document.getElementById('cancel-card').addEventListener('click', () => this.hideCardModal());
                 document.getElementById('card-form').addEventListener('submit', (e) => this.handleCardSubmit(e));
                 
-                // Controles do formulário de transação
                 document.getElementById('transaction-type').addEventListener('change', (e) => this.handleTransactionTypeChange(e));
                 document.getElementById('transaction-payment-method').addEventListener('change', (e) => this.handlePaymentMethodChange(e));
                 
                 document.getElementById('export-data-btn').addEventListener('click', () => this.exportData());
                 
-                // [NOVO] Listeners da seção Recorrentes
                 document.getElementById('post-recurring-dashboard-btn').addEventListener('click', () => this.navigateToSection('recurring'));
                 document.getElementById('post-recurring-btn').addEventListener('click', () => this.handlePostRecurring());
                 document.getElementById('recurring-form').addEventListener('submit', (e) => this.handleRecurringSubmit(e));
@@ -801,7 +798,6 @@
                 });
             }
 
-            // Lógica para navegação no sidebar
             handleSectionChange(e) {
                 const item = e.currentTarget;
                 const section = item.dataset.section;
@@ -809,23 +805,18 @@
                 this.navigateToSection(section, item);
             }
 
-            // [MUDANÇA] Lógica de navegação centralizada
             navigateToSection(section, clickedItem = null) {
-                // Esconde todas as seções
                 document.getElementById('dashboard-section').classList.add('hidden');
                 document.getElementById('cards-section').classList.add('hidden');
-                document.getElementById('recurring-section').classList.add('hidden'); // [NOVO]
+                document.getElementById('recurring-section').classList.add('hidden');
 
-                // Desativa todos os itens do sidebar
                 document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
 
-                // Mostra a seção selecionada
                 const sectionToShow = document.getElementById(`${section}-section`);
                 if (sectionToShow) {
                     sectionToShow.classList.remove('hidden');
                 }
                 
-                // Ativa o item do sidebar selecionado
                 const itemToActive = clickedItem || document.querySelector(`.sidebar-item[data-section="${section}"]`);
                 if (itemToActive) {
                     itemToActive.classList.add('active');
@@ -833,7 +824,6 @@
             }
             
             async handleLogin() {
-                // ... (código inalterado)
                 try {
                     const provider = new GoogleAuthProvider();
                     await signInWithPopup(this.auth, provider);
@@ -847,13 +837,12 @@
             }
             
             async handleLogout() {
-                // ... (código inalterado)
                 if (confirm('Deseja realmente sair?')) {
                     try {
                         await signOut(this.auth);
                         this.detachListeners();
                         document.getElementById('app').classList.add('hidden');
-                        this.navigateToSection('dashboard'); // Reseta a view para o dashboard
+                        this.navigateToSection('dashboard');
                         this.showAuthModal();
                     } catch (error) {
                         console.error('Erro ao sair:', error);
@@ -865,12 +854,12 @@
             renderCategories() {
                 const categoriesList = document.getElementById('categories-list');
                 const transactionCategory = document.getElementById('transaction-category');
-                const recurringCategory = document.getElementById('recurring-category'); // [NOVO]
+                const recurringCategory = document.getElementById('recurring-category');
                 
                 categoriesList.innerHTML = '';
                 const baseOptions = '<option value="">Selecione...</option>';
                 transactionCategory.innerHTML = baseOptions;
-                recurringCategory.innerHTML = baseOptions; // [NOVO]
+                recurringCategory.innerHTML = baseOptions;
                 
                 if (this.categories.length === 0) {
                     categoriesList.innerHTML = '<p class="text-sm text-gray-500">Nenhuma categoria criada</p>';
@@ -878,7 +867,6 @@
                 }
                 
                 this.categories.forEach(category => {
-                    // Renderiza o "chip" na lista
                     const chip = document.createElement('div');
                     chip.className = 'category-chip';
                     chip.innerHTML = `
@@ -892,19 +880,16 @@
                         this.deleteCategory(category.id);
                     });
                     
-                    // Cria a <option>
                     const option = document.createElement('option');
                     option.value = category.id;
                     option.textContent = category.name;
                     
-                    // [MUDANÇA] Adiciona a option nos dois selects
                     transactionCategory.appendChild(option);
-                    recurringCategory.appendChild(option.cloneNode(true)); // Clona para o segundo select
+                    recurringCategory.appendChild(option.cloneNode(true));
                 });
             }
             
             renderPaymentMethods() {
-                // ... (código inalterado)
                 const paymentMethodSelect = document.getElementById('transaction-payment-method');
                 paymentMethodSelect.innerHTML = '<option value="conta">Conta/Dinheiro</option>';
 
@@ -917,7 +902,6 @@
             }
 
             renderCardsSection() {
-                // ... (código inalterado)
                 const cardsGrid = document.getElementById('cards-grid');
                 cardsGrid.innerHTML = '';
 
@@ -926,16 +910,24 @@
                     return;
                 }
 
-                const currentMonth = this.currentDate.getMonth();
-                const currentYear = this.currentDate.getFullYear();
+                const referenceDate = new Date(this.currentDate);
 
                 this.cards.forEach(card => {
+                    const endDate = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), card.closingDay);
+                    
+                    const startDate = new Date(endDate);
+                    startDate.setMonth(startDate.getMonth() - 1);
+                    startDate.setDate(startDate.getDate() + 1);
+
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate.setHours(23, 59, 59, 999);
+
                     const cardExpenses = this.transactions.filter(t => {
+                        if (t.type !== 'despesa' || t.creditCardId !== card.id) {
+                            return false;
+                        }
                         const transactionDate = new Date(t.date + 'T00:00:00');
-                        return t.type === 'despesa' &&
-                               t.creditCardId === card.id &&
-                               transactionDate.getMonth() === currentMonth &&
-                               transactionDate.getFullYear() === currentYear;
+                        return transactionDate >= startDate && transactionDate <= endDate;
                     });
 
                     const totalSpent = cardExpenses.reduce((sum, t) => sum + t.amount, 0);
@@ -958,7 +950,7 @@
                         </div>
                         <div>
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-400">Gasto:</span>
+                                <span class="text-gray-400">Gasto na Fatura:</span>
                                 <span class="font-medium text-white">${this.formatCurrency(totalSpent)}</span>
                             </div>
                             <div class="flex justify-between text-sm">
@@ -986,7 +978,6 @@
                 });
             }
             
-            // [NOVO] Renderiza a lista de transações recorrentes
             renderRecurringList() {
                 const recurringList = document.getElementById('recurring-list');
                 recurringList.innerHTML = '';
@@ -1040,7 +1031,6 @@
             }
 
             updateDashboard() {
-                // ... (código inalterado)
                 const currentMonth = this.currentDate.getMonth();
                 const currentYear = this.currentDate.getFullYear();
                 
@@ -1079,7 +1069,6 @@
             }
             
             renderTransactionsList(transactions) {
-                // ... (código inalterado)
                 const transactionsList = document.getElementById('transactions-list');
                 transactionsList.innerHTML = '';
                 
@@ -1113,23 +1102,33 @@
                                 <div class="font-semibold ${colorClass}">
                                     ${sign} ${this.formatCurrency(transaction.amount)}
                                 </div>
-                                <button class="text-gray-500 hover:text-red-500 text-sm mt-1" data-id="${transaction.id}">
-                                    Remover
-                                </button>
+                                <div class="flex items-center justify-end space-x-2 mt-1">
+                                    <button class="edit-btn text-gray-400 hover:text-teal-400 p-1 rounded-md" data-id="${transaction.id}" title="Editar">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path>
+                                            <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </button>
+                                    <button class="delete-btn text-gray-400 hover:text-red-400 text-sm" data-id="${transaction.id}" title="Remover">
+                                        Remover
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     `;
                     
                     transactionsList.appendChild(transactionElement);
                     
-                    transactionElement.querySelector('button').addEventListener('click', () => {
+                    transactionElement.querySelector('.edit-btn').addEventListener('click', () => {
+                        this.showTransactionModalForEdit(transaction.id);
+                    });
+                    transactionElement.querySelector('.delete-btn').addEventListener('click', () => {
                         this.deleteTransaction(transaction.id);
                     });
                 });
             }
             
             updateCharts(revenue, expenses, transactions) {
-                // ... (código inalterado)
                 const barCtx = document.getElementById('revenue-expense-chart');
                 if (!barCtx) return;
                 
@@ -1210,21 +1209,77 @@
             }
             
             initializeCharts() {
-                // ... (código inalterado)
                 document.getElementById('transaction-date').value = new Date().toISOString().split('T')[0];
                 Chart.defaults.color = '#94a3b8';
             }
             
-            showTransactionModal() { /* ... (código inalterado) */ document.getElementById('transaction-modal').classList.add('show'); }
-            hideTransactionModal() { /* ... (código inalterado) */ document.getElementById('transaction-modal').classList.remove('show'); document.getElementById('transaction-form').reset(); document.getElementById('transaction-date').value = new Date().toISOString().split('T')[0]; }
-            showCategoryModal() { /* ... (código inalterado) */ document.getElementById('category-modal').classList.add('show'); }
-            hideCategoryModal() { /* ... (código inalterado) */ document.getElementById('category-modal').classList.remove('show'); document.getElementById('category-form').reset(); }
-            showCardModal() { /* ... (código inalterado) */ document.getElementById('card-modal').classList.add('show'); }
-            hideCardModal() { /* ... (código inalterado) */ document.getElementById('card-modal').classList.remove('show'); document.getElementById('card-form').reset(); }
-            hideAllModals() { /* ... (código inalterado) */ document.querySelectorAll('.modal').forEach(modal => { modal.classList.remove('show'); }); }
+            showTransactionModal() { document.getElementById('transaction-modal').classList.add('show'); }
+
+            hideTransactionModal() {
+                document.getElementById('transaction-modal').classList.remove('show');
+                const form = document.getElementById('transaction-form');
+                form.reset();
+                delete form.dataset.editingId;
+
+                document.querySelector('#transaction-modal h3').textContent = 'Adicionar Transação';
+                document.querySelector('#transaction-form button[type="submit"]').textContent = 'Adicionar';
+                
+                document.getElementById('transaction-date').value = new Date().toISOString().split('T')[0];
+                document.getElementById('transaction-installments').disabled = false;
+                document.getElementById('installments-container').classList.add('hidden');
+                document.getElementById('payment-method-container').style.display = 'block';
+            }
             
-            async handleTransactionSubmit(e) { /* ... (código inalterado com userId) */ 
+            showTransactionModalForEdit(transactionId) {
+                const transaction = this.transactions.find(t => t.id === transactionId);
+                if (!transaction) {
+                    this.showError('Transação não encontrada.');
+                    return;
+                }
+
+                document.querySelector('#transaction-modal h3').textContent = 'Editar Transação';
+                document.querySelector('#transaction-form button[type="submit"]').textContent = 'Salvar Alterações';
+
+                const form = document.getElementById('transaction-form');
+                form.dataset.editingId = transactionId;
+                
+                document.getElementById('transaction-description').value = transaction.description;
+                document.getElementById('transaction-amount').value = transaction.amount;
+                document.getElementById('transaction-date').value = transaction.date;
+                document.getElementById('transaction-type').value = transaction.type;
+                document.getElementById('transaction-category').value = transaction.categoryId;
+
+                const paymentMethodContainer = document.getElementById('payment-method-container');
+                const paymentMethodSelect = document.getElementById('transaction-payment-method');
+                if (transaction.type === 'despesa') {
+                    paymentMethodContainer.style.display = 'block';
+                    paymentMethodSelect.value = transaction.creditCardId || 'conta';
+                } else {
+                    paymentMethodContainer.style.display = 'none';
+                    paymentMethodSelect.value = 'conta';
+                }
+
+                const installmentsContainer = document.getElementById('installments-container');
+                const installmentsInput = document.getElementById('transaction-installments');
+                const isInstallment = /\(\d+\/\d+\)/.test(transaction.description);
+
+                installmentsContainer.classList.add('hidden');
+                installmentsInput.disabled = true;
+
+                this.showTransactionModal();
+            }
+
+            showCategoryModal() { document.getElementById('category-modal').classList.add('show'); }
+            hideCategoryModal() { document.getElementById('category-modal').classList.remove('show'); document.getElementById('category-form').reset(); }
+            showCardModal() { document.getElementById('card-modal').classList.add('show'); }
+            hideCardModal() { document.getElementById('card-modal').classList.remove('show'); document.getElementById('card-form').reset(); }
+            hideAllModals() { document.querySelectorAll('.modal').forEach(modal => { modal.classList.remove('show'); }); }
+            
+            async handleTransactionSubmit(e) {
                 e.preventDefault();
+                const form = e.target;
+                const editingId = form.dataset.editingId;
+
                 try {
                     const description = document.getElementById('transaction-description').value.trim();
                     const amount = parseFloat(document.getElementById('transaction-amount').value);
@@ -1246,25 +1301,31 @@
                         type,
                         categoryId,
                         creditCardId: (type === 'despesa' && paymentMethod !== 'conta') ? paymentMethod : null,
-                        userId: this.userId,
-                        createdAt: new Date().toISOString()
+                        userId: this.userId
                     };
                     
-                    if (transactionData.creditCardId && type === 'despesa' && installments > 1) {
-                        await this.createInstallments(transactionData, installments);
+                    if (editingId) {
+                        const docRef = doc(this.db, 'financeflow-transactions', editingId);
+                        await updateDoc(docRef, transactionData);
+                        this.showSuccess('Transação atualizada com sucesso!');
                     } else {
-                        await addDoc(collection(this.db, 'financeflow-transactions'), transactionData);
+                        transactionData.createdAt = new Date().toISOString();
+                        if (transactionData.creditCardId && type === 'despesa' && installments > 1) {
+                            await this.createInstallments(transactionData, installments);
+                        } else {
+                            await addDoc(collection(this.db, 'financeflow-transactions'), transactionData);
+                        }
+                        this.showSuccess('Transação adicionada com sucesso!');
                     }
                     
                     this.hideTransactionModal();
-                    this.showSuccess('Transação adicionada com sucesso!');
                 } catch (error) {
-                    console.error('Erro ao adicionar transação:', error);
-                    this.showError('Erro ao adicionar transação');
+                    console.error('Erro ao salvar transação:', error);
+                    this.showError('Erro ao salvar transação');
                 }
             }
             
-            async createInstallments(transactionData, installments) { /* ... (código inalterado) */ 
+            async createInstallments(transactionData, installments) {
                 const batch = writeBatch(this.db);
                 const totalAmount = transactionData.amount;
                 const installmentAmount = Math.floor((totalAmount / installments) * 100) / 100;
@@ -1291,7 +1352,7 @@
                 await batch.commit();
             }
             
-            async handleCategorySubmit(e) { /* ... (código inalterado com userId) */ 
+            async handleCategorySubmit(e) {
                 e.preventDefault();
                 const categoryName = document.getElementById('category-name').value.trim();
                 if (!categoryName) {
@@ -1312,7 +1373,7 @@
                 }
             }
             
-            async handleCardSubmit(e) { /* ... (código inalterado com userId) */ 
+            async handleCardSubmit(e) {
                 e.preventDefault();
                 const cardName = document.getElementById('card-name').value.trim();
                 const closingDay = parseInt(document.getElementById('card-closing-day').value);
@@ -1339,7 +1400,6 @@
                 }
             }
             
-            // [NOVO] Adiciona uma nova transação recorrente
             async handleRecurringSubmit(e) {
                 e.preventDefault();
                 
@@ -1363,7 +1423,7 @@
                         categoryId,
                         userId: this.userId,
                         createdAt: new Date().toISOString(),
-                        lastPosted: null // Inicia como nulo
+                        lastPosted: null
                     });
                     
                     this.showSuccess('Transação recorrente adicionada!');
@@ -1375,7 +1435,6 @@
                 }
             }
 
-            // [NOVO] Executa o lançamento das transações recorrentes pendentes
             async handlePostRecurring() {
                 const btn = document.getElementById('post-recurring-btn');
                 btn.disabled = true;
@@ -1391,12 +1450,10 @@
                     let itemsPosted = 0;
                     
                     for (const item of this.recurring) {
-                        // 1. Verifica se está na data
                         if (item.dayOfMonth > currentDay) {
-                            continue; // Ainda não venceu
+                            continue;
                         }
 
-                        // 2. Verifica se já foi postado este mês
                         let alreadyPosted = false;
                         if (item.lastPosted) {
                             const lastPostedDate = new Date(item.lastPosted);
@@ -1406,28 +1463,25 @@
                         }
 
                         if (alreadyPosted) {
-                            continue; // Já postado
+                            continue;
                         }
 
-                        // Se chegou aqui, deve ser postado
                         itemsPosted++;
                         
-                        // 3. Prepara a nova transação
                         const newTransaction = {
                             description: item.description,
                             amount: item.amount,
                             type: item.type,
                             categoryId: item.categoryId,
                             userId: this.userId,
-                            date: today.toISOString().split('T')[0], // Lança com a data de hoje
+                            date: today.toISOString().split('T')[0],
                             createdAt: new Date().toISOString(),
-                            creditCardId: null // Recorrentes não são lançadas no cartão por padrão
+                            creditCardId: null
                         };
                         
                         const newTransRef = doc(collection(this.db, 'financeflow-transactions'));
                         batch.set(newTransRef, newTransaction);
                         
-                        // 4. Prepara a atualização do item recorrente
                         const recurringRef = doc(this.db, 'financeflow-recurring', item.id);
                         batch.update(recurringRef, { lastPosted: today.toISOString() });
                     }
@@ -1453,7 +1507,7 @@
                 }
             }
             
-            handleTransactionTypeChange(e) { /* ... (código inalterado) */ 
+            handleTransactionTypeChange(e) {
                 const isExpense = e.target.value === 'despesa';
                 const paymentMethodContainer = document.getElementById('payment-method-container');
                 
@@ -1466,7 +1520,7 @@
                 }
             }
             
-            handlePaymentMethodChange(e) { /* ... (código inalterado) */ 
+            handlePaymentMethodChange(e) {
                 const isCreditCard = e.target.value !== 'conta';
                 const isExpense = document.getElementById('transaction-type').value === 'despesa';
                 const installmentsContainer = document.getElementById('installments-container');
@@ -1479,7 +1533,7 @@
                 }
             }
             
-            async deleteTransaction(id) { /* ... (código inalterado) */ 
+            async deleteTransaction(id) {
                 if (!confirm('Remover esta transação?')) return;
                 try {
                     await deleteDoc(doc(this.db, 'financeflow-transactions', id));
@@ -1490,11 +1544,11 @@
                 }
             }
             
-            async deleteCategory(id) { /* ... (código inalterado com verificação) */ 
+            async deleteCategory(id) {
                 if (!confirm('Remover esta categoria?')) return;
                 
                 const isUsedTransaction = this.transactions.some(t => t.categoryId === id);
-                const isUsedRecurring = this.recurring.some(r => r.categoryId === id); // [NOVO] Verifica recorrentes
+                const isUsedRecurring = this.recurring.some(r => r.categoryId === id);
                 
                 if (isUsedTransaction || isUsedRecurring) {
                     this.showError('Não é possível remover. Categoria em uso por transações ou recorrentes.');
@@ -1510,7 +1564,7 @@
                 }
             }
             
-            async deleteCard(id) { /* ... (código inalterado com verificação) */ 
+            async deleteCard(id) {
                 if (!confirm('Remover este cartão?')) return;
                 
                 const isUsed = this.transactions.some(t => t.creditCardId === id);
@@ -1528,7 +1582,6 @@
                 }
             }
 
-            // [NOVO] Deleta um item recorrente
             async deleteRecurring(id) {
                 if (!confirm('Remover este item recorrente?')) return;
                 
@@ -1541,12 +1594,11 @@
                 }
             }
             
-            formatCurrency(value) { /* ... (código inalterado) */ return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0); }
-            formatDate(date) { /* ... (código inalterado) */ return new Intl.DateTimeFormat('pt-BR').format(new Date(date + 'T00:00:00')); }
-            changeMonth(direction) { /* ... (código inalterado) */ this.currentDate.setMonth(this.currentDate.getMonth() + direction); this.updateDashboard(); }
+            formatCurrency(value) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0); }
+            formatDate(date) { return new Intl.DateTimeFormat('pt-BR').format(new Date(date + 'T00:00:00')); }
+            changeMonth(direction) { this.currentDate.setMonth(this.currentDate.getMonth() + direction); this.updateDashboard(); }
             
             exportData() {
-                // [MUDANÇA] Adiciona recorrentes ao export
                 const data = {
                     transactions: this.transactions,
                     categories: this.categories,
@@ -1568,16 +1620,15 @@
                 this.showSuccess('Dados exportados!');
             }
             
-            showAuthModal() { /* ... (código inalterado) */ document.getElementById('auth-modal').classList.add('show'); }
-            hideAuthModal() { /* ... (código inalterado) */ document.getElementById('auth-modal').classList.remove('show'); }
-            showApp() { /* ... (código inalterado) */ document.getElementById('app').classList.remove('hidden'); }
-            hideLoading() { /* ... (código inalterado) */ const overlay = document.getElementById('loading-overlay'); if (overlay) { overlay.style.opacity = '0'; setTimeout(() => { overlay.style.display = 'none'; }, 300); } }
+            showAuthModal() { document.getElementById('auth-modal').classList.add('show'); }
+            hideAuthModal() { document.getElementById('auth-modal').classList.remove('show'); }
+            showApp() { document.getElementById('app').classList.remove('hidden'); }
+            hideLoading() { const overlay = document.getElementById('loading-overlay'); if (overlay) { overlay.style.opacity = '0'; setTimeout(() => { overlay.style.display = 'none'; }, 300); } }
             
-            showError(message) { /* ... (código inalterado) */ this.showNotification(message, 'error'); }
-            showSuccess(message) { /* ... (código inalterado) */ this.showNotification(message, 'success'); }
+            showError(message) { this.showNotification(message, 'error'); }
+            showSuccess(message) { this.showNotification(message, 'success'); }
             
             showNotification(message, type = 'info') {
-                // ... (código inalterado)
                 const notification = document.createElement('div');
                 notification.className = `fixed top-4 right-4 z-[1001] p-4 rounded-lg shadow-lg max-w-sm transform translate-x-full transition-transform duration-300 ${
                     type === 'error' ? 'bg-red-600 text-white' :
