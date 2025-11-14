@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinanceFlow 2.3 - Controle Financeiro Familiar</title>
+    <title>FinanceFlow 2.2 - Controle Financeiro Familiar</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -142,7 +142,7 @@
             border-right: 3px solid var(--primary-color);
         }
         
-        .transaction-item, .recurring-item {
+        .transaction-item, .recurring-item { /* [MUDANÇA] Aplicado a ambos */
             border-left: 4px solid transparent;
             transition: all 0.2s ease;
         }
@@ -210,6 +210,7 @@
             transition: width 0.5s ease-in-out;
         }
 
+        /* Estilos de input para dark mode */
         input[type="text"],
         input[type="number"],
         input[type="date"],
@@ -242,7 +243,7 @@
                 <div class="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl mx-auto mb-6 flex items-center justify-center">
                     <span class="text-white font-bold text-xl">FF</span>
                 </div>
-                <h1 class="text-3xl font-display font-bold gradient-text mb-4">FinanceFlow 2.3</h1>
+                <h1 class="text-3xl font-display font-bold gradient-text mb-4">FinanceFlow 2.2</h1>
                 <p class="text-gray-400 mb-8">Controle financeiro familiar inteligente</p>
                 <button id="login-btn" class="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all duration-200 transform hover:scale-105">
                     Entrar com Google
@@ -260,7 +261,7 @@
                         <div class="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
                             <span class="text-white font-bold text-sm">FF</span>
                         </div>
-                        <span class="font-display font-semibold text-xl text-white">FinanceFlow 2.3</span>
+                        <span class="font-display font-semibold text-xl text-white">FinanceFlow 2.2</span>
                     </div>
                     <div class="flex items-center space-x-4">
                         <span id="user-name" class="text-gray-300 font-medium">Olá, Usuário</span>
@@ -417,7 +418,7 @@
                     <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                         <div>
                             <h1 class="font-display text-3xl font-bold text-white mb-2">Gestão de Cartões</h1>
-                            <p class="text-gray-400">Acompanhe seus limites e gastos por fatura</p>
+                            <p class="text-gray-400">Acompanhe seus limites e gastos deste mês</p>
                         </div>
                         <button id="add-card-btn-main" class="bg-teal-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -515,7 +516,7 @@
     <div id="transaction-modal" class="modal">
         <div class="modal-content">
             <div class="flex items-center justify-between mb-6">
-                <h3 id="transaction-modal-title" class="text-xl font-semibold text-gray-200">Adicionar Transação</h3>
+                <h3 class="text-xl font-semibold text-gray-200">Adicionar Transação</h3>
                 <button id="close-transaction-modal" class="text-gray-500 hover:text-gray-300">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -563,7 +564,7 @@
                     <input type="number" id="transaction-installments" min="1" max="24" value="1" class="w-full px-3 py-2">
                 </div>
                 <div class="flex space-x-3 pt-4">
-                    <button type="submit" id="transaction-submit-btn" class="flex-1 bg-teal-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-teal-700 transition-colors">
+                    <button type="submit" class="flex-1 bg-teal-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-teal-700 transition-colors">
                         Adicionar
                     </button>
                     <button type="button" id="cancel-transaction" class="flex-1 bg-slate-600 text-gray-300 py-2 px-4 rounded-lg font-medium hover:bg-slate-500 transition-colors">
@@ -641,8 +642,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // [MUDANÇA] Importa o updateDoc
-        import { getFirestore, collection, addDoc, doc, deleteDoc, onSnapshot, query, where, writeBatch, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, deleteDoc, onSnapshot, query, where, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         class FinanceFlowV2 {
             constructor() {
@@ -654,14 +654,12 @@
                 this.categories = [];
                 this.transactions = [];
                 this.cards = [];
-                this.recurring = [];
+                this.recurring = []; // [NOVO] Array para transações recorrentes
                 
                 this.currentDate = new Date();
                 this.charts = {};
                 
                 this.unsubscribers = [];
-                
-                this.editingTransactionId = null; // [NOVO] Flag para modo de edição
                 
                 this.init();
             }
@@ -678,6 +676,7 @@
             }
             
             async initializeFirebase() {
+                // [IMPORTANTE] Substitua com sua própria configuração do Firebase
                 const firebaseConfig = {
                     apiKey: "AIzaSyAcNVoZwadbi2_p9MnuAR1XGdLHK3ojrwA",
                     authDomain: "fin-app-a047e.firebaseapp.com",
@@ -702,7 +701,6 @@
             }
             
             onUserAuthenticated(user) {
-                // ... (código inalterado)
                 document.getElementById('user-name').textContent = `Olá, ${user.displayName || 'Usuário'}`;
                 this.hideAuthModal();
                 this.showApp();
@@ -713,10 +711,12 @@
             attachRealtimeListeners() {
                 this.detachListeners();
                 
+                // [MUDANÇA] Todas as queries agora filtram por userId
+                // Lembre-se de criar as Regras de Segurança no Firestore!
                 const categoriesRef = query(collection(this.db, 'financeflow-categories'), where('userId', '==', this.userId));
                 const transactionsRef = query(collection(this.db, 'financeflow-transactions'), where('userId', '==', this.userId));
                 const cardsRef = query(collection(this.db, 'financeflow-cards'), where('userId', '==', this.userId));
-                const recurringRef = query(collection(this.db, 'financeflow-recurring'), where('userId', '==', this.userId));
+                const recurringRef = query(collection(this.db, 'financeflow-recurring'), where('userId', '==', this.userId)); // [NOVO]
 
                 this.unsubscribers.push(
                     onSnapshot(categoriesRef, (snapshot) => {
@@ -740,6 +740,7 @@
                     }, (error) => console.error('Erro ao carregar cartões:', error))
                 );
 
+                // [NOVO] Listener para recorrentes
                 this.unsubscribers.push(
                     onSnapshot(recurringRef, (snapshot) => {
                         this.recurring = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -749,23 +750,23 @@
             }
             
             detachListeners() {
-                // ... (código inalterado)
                 this.unsubscribers.forEach(unsub => unsub());
                 this.unsubscribers = [];
             }
             
             setupEventListeners() {
-                // ... (código inalterado até o form)
                 document.getElementById('login-btn').addEventListener('click', () => this.handleLogin());
                 document.getElementById('logout-btn').addEventListener('click', () => this.handleLogout());
                 
                 document.getElementById('prev-month').addEventListener('click', () => this.changeMonth(-1));
                 document.getElementById('next-month').addEventListener('click', () => this.changeMonth(1));
                 
+                // Navegação por seções
                 document.querySelectorAll('.sidebar-item').forEach(item => {
                     item.addEventListener('click', (e) => this.handleSectionChange(e));
                 });
                 
+                // Modais de Adição
                 document.getElementById('fab-main').addEventListener('click', () => this.showTransactionModal());
                 document.getElementById('add-transaction-btn').addEventListener('click', () => this.showTransactionModal());
                 document.getElementById('close-transaction-modal').addEventListener('click', () => this.hideTransactionModal());
@@ -782,11 +783,13 @@
                 document.getElementById('cancel-card').addEventListener('click', () => this.hideCardModal());
                 document.getElementById('card-form').addEventListener('submit', (e) => this.handleCardSubmit(e));
                 
+                // Controles do formulário de transação
                 document.getElementById('transaction-type').addEventListener('change', (e) => this.handleTransactionTypeChange(e));
                 document.getElementById('transaction-payment-method').addEventListener('change', (e) => this.handlePaymentMethodChange(e));
                 
                 document.getElementById('export-data-btn').addEventListener('click', () => this.exportData());
                 
+                // [NOVO] Listeners da seção Recorrentes
                 document.getElementById('post-recurring-dashboard-btn').addEventListener('click', () => this.navigateToSection('recurring'));
                 document.getElementById('post-recurring-btn').addEventListener('click', () => this.handlePostRecurring());
                 document.getElementById('recurring-form').addEventListener('submit', (e) => this.handleRecurringSubmit(e));
@@ -798,46 +801,76 @@
                 });
             }
 
+            // Lógica para navegação no sidebar
             handleSectionChange(e) {
-                // ... (código inalterado)
                 const item = e.currentTarget;
                 const section = item.dataset.section;
                 if (!section) return;
                 this.navigateToSection(section, item);
             }
 
+            // [MUDANÇA] Lógica de navegação centralizada
             navigateToSection(section, clickedItem = null) {
-                // ... (código inalterado)
+                // Esconde todas as seções
                 document.getElementById('dashboard-section').classList.add('hidden');
                 document.getElementById('cards-section').classList.add('hidden');
-                document.getElementById('recurring-section').classList.add('hidden');
+                document.getElementById('recurring-section').classList.add('hidden'); // [NOVO]
 
+                // Desativa todos os itens do sidebar
                 document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
 
+                // Mostra a seção selecionada
                 const sectionToShow = document.getElementById(`${section}-section`);
                 if (sectionToShow) {
                     sectionToShow.classList.remove('hidden');
                 }
                 
+                // Ativa o item do sidebar selecionado
                 const itemToActive = clickedItem || document.querySelector(`.sidebar-item[data-section="${section}"]`);
                 if (itemToActive) {
                     itemToActive.classList.add('active');
                 }
             }
             
-            async handleLogin() { /* ... (código inalterado) */ }
-            async handleLogout() { /* ... (código inalterado) */ }
+            async handleLogin() {
+                // ... (código inalterado)
+                try {
+                    const provider = new GoogleAuthProvider();
+                    await signInWithPopup(this.auth, provider);
+                    document.getElementById('login-error').classList.add('hidden');
+                } catch (error) {
+                    console.error('Erro no login:', error);
+                    const loginError = document.getElementById('login-error');
+                    loginError.textContent = 'Erro no login: ' + error.message;
+                    loginError.classList.remove('hidden');
+                }
+            }
+            
+            async handleLogout() {
+                // ... (código inalterado)
+                if (confirm('Deseja realmente sair?')) {
+                    try {
+                        await signOut(this.auth);
+                        this.detachListeners();
+                        document.getElementById('app').classList.add('hidden');
+                        this.navigateToSection('dashboard'); // Reseta a view para o dashboard
+                        this.showAuthModal();
+                    } catch (error) {
+                        console.error('Erro ao sair:', error);
+                        this.showError('Erro ao sair');
+                    }
+                }
+            }
             
             renderCategories() {
-                // ... (código inalterado)
                 const categoriesList = document.getElementById('categories-list');
                 const transactionCategory = document.getElementById('transaction-category');
-                const recurringCategory = document.getElementById('recurring-category');
+                const recurringCategory = document.getElementById('recurring-category'); // [NOVO]
                 
                 categoriesList.innerHTML = '';
                 const baseOptions = '<option value="">Selecione...</option>';
                 transactionCategory.innerHTML = baseOptions;
-                recurringCategory.innerHTML = baseOptions;
+                recurringCategory.innerHTML = baseOptions; // [NOVO]
                 
                 if (this.categories.length === 0) {
                     categoriesList.innerHTML = '<p class="text-sm text-gray-500">Nenhuma categoria criada</p>';
@@ -845,21 +878,28 @@
                 }
                 
                 this.categories.forEach(category => {
+                    // Renderiza o "chip" na lista
                     const chip = document.createElement('div');
                     chip.className = 'category-chip';
-                    chip.innerHTML = `${category.name} <span class="remove" data-id="${category.id}">×</span>`;
+                    chip.innerHTML = `
+                        ${category.name}
+                        <span class="remove" data-id="${category.id}">×</span>
+                    `;
                     categoriesList.appendChild(chip);
+                    
                     chip.querySelector('.remove').addEventListener('click', (e) => {
                         e.stopPropagation();
                         this.deleteCategory(category.id);
                     });
                     
+                    // Cria a <option>
                     const option = document.createElement('option');
                     option.value = category.id;
                     option.textContent = category.name;
                     
+                    // [MUDANÇA] Adiciona a option nos dois selects
                     transactionCategory.appendChild(option);
-                    recurringCategory.appendChild(option.cloneNode(true));
+                    recurringCategory.appendChild(option.cloneNode(true)); // Clona para o segundo select
                 });
             }
             
@@ -867,6 +907,7 @@
                 // ... (código inalterado)
                 const paymentMethodSelect = document.getElementById('transaction-payment-method');
                 paymentMethodSelect.innerHTML = '<option value="conta">Conta/Dinheiro</option>';
+
                 this.cards.forEach(card => {
                     const option = document.createElement('option');
                     option.value = card.id;
@@ -875,8 +916,8 @@
                 });
             }
 
-            // [MUDANÇA] Lógica de fatura do cartão corrigida
             renderCardsSection() {
+                // ... (código inalterado)
                 const cardsGrid = document.getElementById('cards-grid');
                 cardsGrid.innerHTML = '';
 
@@ -889,31 +930,13 @@
                 const currentYear = this.currentDate.getFullYear();
 
                 this.cards.forEach(card => {
-                    
-                    // [NOVA LÓGICA DE CÁLCULO DE FATURA]
-                    const closingDay = card.closingDay;
-                    
-                    // endDate é o dia de fechamento NO MÊS de visualização
-                    const endDate = new Date(currentYear, currentMonth, closingDay, 23, 59, 59, 999);
-                    
-                    // startDate é o dia SEGUINTE ao fechamento DO MÊS ANTERIOR
-                    const startDate = new Date(currentYear, currentMonth, closingDay);
-                    startDate.setMonth(startDate.getMonth() - 1); // Vai para o dia de fechamento do mês anterior
-                    startDate.setDate(startDate.getDate() + 1); // Vai para o dia seguinte
-                    startDate.setHours(0, 0, 0, 0); // Zera a hora
-                    // Ex: Vendo Novembro, fecha dia 15.
-                    // endDate = 15 de Nov
-                    // startDate = 16 de Out
-
-                    // Filtra as transações baseadas no período da fatura, não no mês
                     const cardExpenses = this.transactions.filter(t => {
-                        const transactionDate = new Date(t.date + 'T00:00:00'); // Garante data local
+                        const transactionDate = new Date(t.date + 'T00:00:00');
                         return t.type === 'despesa' &&
                                t.creditCardId === card.id &&
-                               transactionDate >= startDate &&
-                               transactionDate <= endDate;
+                               transactionDate.getMonth() === currentMonth &&
+                               transactionDate.getFullYear() === currentYear;
                     });
-                    // [FIM DA NOVA LÓGICA]
 
                     const totalSpent = cardExpenses.reduce((sum, t) => sum + t.amount, 0);
                     const limit = card.limit || 0;
@@ -929,13 +952,13 @@
                         <div class="flex justify-between items-start">
                             <div>
                                 <div class="font-bold text-lg text-white">${card.name}</div>
-                                <div class="text-sm text-gray-400">Fatura fecha dia ${card.closingDay}</div>
+                                <div class="text-sm text-gray-400">Fecha dia ${card.closingDay}</div>
                             </div>
                             <button class="text-red-500 text-xs hover:text-red-400" data-id="${card.id}">Remover</button>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-400">Gasto (Fatura Atual):</span>
+                                <span class="text-gray-400">Gasto:</span>
                                 <span class="font-medium text-white">${this.formatCurrency(totalSpent)}</span>
                             </div>
                             <div class="flex justify-between text-sm">
@@ -963,8 +986,8 @@
                 });
             }
             
+            // [NOVO] Renderiza a lista de transações recorrentes
             renderRecurringList() {
-                // ... (código inalterado)
                 const recurringList = document.getElementById('recurring-list');
                 recurringList.innerHTML = '';
 
@@ -1052,10 +1075,11 @@
                 
                 this.renderTransactionsList(monthTransactions);
                 this.updateCharts(totalRevenue, totalExpenses, monthTransactions);
-                this.renderCardsSection(); // Atualiza os cartões (importante!)
+                this.renderCardsSection();
             }
             
             renderTransactionsList(transactions) {
+                // ... (código inalterado)
                 const transactionsList = document.getElementById('transactions-list');
                 transactionsList.innerHTML = '';
                 
@@ -1089,158 +1113,345 @@
                                 <div class="font-semibold ${colorClass}">
                                     ${sign} ${this.formatCurrency(transaction.amount)}
                                 </div>
-                                <div class="flex items-center justify-end mt-1">
-                                    <button class="text-gray-400 hover:text-teal-400 text-sm p-1" data-id="${transaction.id}" data-action="edit">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                    </button>
-                                    <button class="text-gray-400 hover:text-red-500 text-sm p-1" data-id="${transaction.id}" data-action="delete">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    </button>
-                                </div>
+                                <button class="text-gray-500 hover:text-red-500 text-sm mt-1" data-id="${transaction.id}">
+                                    Remover
+                                </button>
                             </div>
                         </div>
                     `;
                     
                     transactionsList.appendChild(transactionElement);
                     
-                    // [MUDANÇA] Adiciona listeners para os novos botões
-                    transactionElement.querySelector('[data-action="edit"]').addEventListener('click', () => {
-                        this.handleEditTransaction(transaction.id);
-                    });
-                    transactionElement.querySelector('[data-action="delete"]').addEventListener('click', () => {
+                    transactionElement.querySelector('button').addEventListener('click', () => {
                         this.deleteTransaction(transaction.id);
                     });
                 });
             }
             
-            updateCharts(revenue, expenses, transactions) { /* ... (código inalterado) */ }
-            initializeCharts() { /* ... (código inalterado) */ }
+            updateCharts(revenue, expenses, transactions) {
+                // ... (código inalterado)
+                const barCtx = document.getElementById('revenue-expense-chart');
+                if (!barCtx) return;
+                
+                if (this.charts.bar) {
+                    this.charts.bar.destroy();
+                }
+                
+                this.charts.bar = new Chart(barCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Receitas', 'Despesas'],
+                        datasets: [{
+                            data: [revenue || 0.1, expenses || 0.1],
+                            backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(239, 68, 68, 0.8)'],
+                            borderColor: '#1e293b',
+                            borderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#94a3b8' }
+                            }
+                        }
+                    }
+                });
+                
+                const categoryExpenses = {};
+                transactions.filter(t => t.type === 'despesa').forEach(t => {
+                    const categoryName = this.categories.find(c => c.id === t.categoryId)?.name || 'Outros';
+                    categoryExpenses[categoryName] = (categoryExpenses[categoryName] || 0) + t.amount;
+                });
+                
+                const categoryCtx = document.getElementById('category-chart');
+                if (!categoryCtx) return;
+                
+                if (this.charts.category) {
+                    this.charts.category.destroy();
+                }
+                
+                if (Object.keys(categoryExpenses).length > 0) {
+                    this.charts.category = new Chart(categoryCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(categoryExpenses),
+                            datasets: [{
+                                label: 'Gastos',
+                                data: Object.values(categoryExpenses),
+                                backgroundColor: 'rgba(20, 184, 166, 0.8)',
+                                borderColor: 'rgb(20, 184, 166)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                x: { 
+                                    beginAtZero: true,
+                                    ticks: { color: '#94a3b8' },
+                                    grid: { color: '#334155' }
+                                },
+                                y: {
+                                    ticks: { color: '#94a3b8' },
+                                    grid: { color: '#334155' }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            initializeCharts() {
+                // ... (código inalterado)
+                document.getElementById('transaction-date').value = new Date().toISOString().split('T')[0];
+                Chart.defaults.color = '#94a3b8';
+            }
             
             showTransactionModal() { /* ... (código inalterado) */ document.getElementById('transaction-modal').classList.add('show'); }
+            hideTransactionModal() { /* ... (código inalterado) */ document.getElementById('transaction-modal').classList.remove('show'); document.getElementById('transaction-form').reset(); document.getElementById('transaction-date').value = new Date().toISOString().split('T')[0]; }
+            showCategoryModal() { /* ... (código inalterado) */ document.getElementById('category-modal').classList.add('show'); }
+            hideCategoryModal() { /* ... (código inalterado) */ document.getElementById('category-modal').classList.remove('show'); document.getElementById('category-form').reset(); }
+            showCardModal() { /* ... (código inalterado) */ document.getElementById('card-modal').classList.add('show'); }
+            hideCardModal() { /* ... (código inalterado) */ document.getElementById('card-modal').classList.remove('show'); document.getElementById('card-form').reset(); }
+            hideAllModals() { /* ... (código inalterado) */ document.querySelectorAll('.modal').forEach(modal => { modal.classList.remove('show'); }); }
             
-            // [MUDANÇA] hideTransactionModal agora reseta o estado de edição
-            hideTransactionModal() {
-                document.getElementById('transaction-modal').classList.remove('show');
-                document.getElementById('transaction-form').reset();
-                document.getElementById('transaction-date').value = new Date().toISOString().split('T')[0];
-                
-                // Reseta o estado de edição
-                this.editingTransactionId = null;
-                document.getElementById('transaction-modal-title').textContent = 'Adicionar Transação';
-                document.getElementById('transaction-submit-btn').textContent = 'Adicionar';
-                
-                // Garante que o container de parcelas esteja visível se o tipo for despesa
-                this.handleTransactionTypeChange({ target: document.getElementById('transaction-type') });
-                document.getElementById('installments-container').classList.add('hidden');
-                document.getElementById('transaction-installments').disabled = false;
-            }
-            
-            showCategoryModal() { /* ... (código inalterado) */ }
-            hideCategoryModal() { /* ... (código inalterado) */ }
-            showCardModal() { /* ... (código inalterado) */ }
-            hideCardModal() { /* ... (código inalterado) */ }
-            hideAllModals() { /* ... (código inalterado) */ }
-            
-            // [MUDANÇA] handleTransactionSubmit agora trata ADIÇÃO e EDIÇÃO
-            async handleTransactionSubmit(e) {
+            async handleTransactionSubmit(e) { /* ... (código inalterado com userId) */ 
                 e.preventDefault();
-                
-                // Coleta dados do formulário
-                const description = document.getElementById('transaction-description').value.trim();
-                const amount = parseFloat(document.getElementById('transaction-amount').value);
-                const date = document.getElementById('transaction-date').value;
-                const type = document.getElementById('transaction-type').value;
-                const categoryId = document.getElementById('transaction-category').value;
-                const paymentMethod = document.getElementById('transaction-payment-method').value;
-                const installments = parseInt(document.getElementById('transaction-installments').value) || 1;
-                
-                if (!description || !amount || !date || !categoryId) {
-                    this.showError('Preencha todos os campos');
-                    return;
-                }
-
-                // Prepara o objeto de dados base
-                const transactionData = {
-                    description,
-                    amount,
-                    date,
-                    type,
-                    categoryId,
-                    creditCardId: (type === 'despesa' && paymentMethod !== 'conta') ? paymentMethod : null,
-                };
-
                 try {
-                    if (this.editingTransactionId) {
-                        // MODO DE EDIÇÃO
-                        const docRef = doc(this.db, 'financeflow-transactions', this.editingTransactionId);
-                        await updateDoc(docRef, {
-                            ...transactionData,
-                            updatedAt: new Date().toISOString()
-                        });
-                        this.showSuccess('Transação atualizada!');
-
-                    } else {
-                        // MODO DE ADIÇÃO (lógica original)
-                        const dataWithUser = {
-                            ...transactionData,
-                            userId: this.userId,
-                            createdAt: new Date().toISOString()
-                        };
-
-                        if (dataWithUser.creditCardId && type === 'despesa' && installments > 1) {
-                            await this.createInstallments(dataWithUser, installments);
-                        } else {
-                            await addDoc(collection(this.db, 'financeflow-transactions'), dataWithUser);
-                        }
-                        this.showSuccess('Transação adicionada com sucesso!');
+                    const description = document.getElementById('transaction-description').value.trim();
+                    const amount = parseFloat(document.getElementById('transaction-amount').value);
+                    const date = document.getElementById('transaction-date').value;
+                    const type = document.getElementById('transaction-type').value;
+                    const categoryId = document.getElementById('transaction-category').value;
+                    const paymentMethod = document.getElementById('transaction-payment-method').value;
+                    const installments = parseInt(document.getElementById('transaction-installments').value) || 1;
+                    
+                    if (!description || !amount || !date || !categoryId) {
+                        this.showError('Preencha todos os campos');
+                        return;
                     }
                     
-                    this.hideTransactionModal(); // Reseta o formulário e o estado de edição
+                    const transactionData = {
+                        description,
+                        amount,
+                        date,
+                        type,
+                        categoryId,
+                        creditCardId: (type === 'despesa' && paymentMethod !== 'conta') ? paymentMethod : null,
+                        userId: this.userId,
+                        createdAt: new Date().toISOString()
+                    };
                     
+                    if (transactionData.creditCardId && type === 'despesa' && installments > 1) {
+                        await this.createInstallments(transactionData, installments);
+                    } else {
+                        await addDoc(collection(this.db, 'financeflow-transactions'), transactionData);
+                    }
+                    
+                    this.hideTransactionModal();
+                    this.showSuccess('Transação adicionada com sucesso!');
                 } catch (error) {
-                    console.error('Erro ao salvar transação:', error);
-                    this.showError('Erro ao salvar transação');
+                    console.error('Erro ao adicionar transação:', error);
+                    this.showError('Erro ao adicionar transação');
+                }
+            }
+            
+            async createInstallments(transactionData, installments) { /* ... (código inalterado) */ 
+                const batch = writeBatch(this.db);
+                const totalAmount = transactionData.amount;
+                const installmentAmount = Math.floor((totalAmount / installments) * 100) / 100;
+                const firstInstallmentAmount = totalAmount - (installmentAmount * (installments - 1));
+                
+                const [year, month, day] = transactionData.date.split('-').map(Number);
+                const baseDate = new Date(year, month - 1, day);
+                
+                for (let i = 0; i < installments; i++) {
+                    const installmentDate = new Date(baseDate);
+                    installmentDate.setMonth(baseDate.getMonth() + i);
+                    
+                    const installmentTransaction = {
+                        ...transactionData,
+                        description: `${transactionData.description} (${i + 1}/${installments})`,
+                        amount: i === 0 ? firstInstallmentAmount : installmentAmount,
+                        date: installmentDate.toISOString().split('T')[0]
+                    };
+                    
+                    const newDocRef = doc(collection(this.db, 'financeflow-transactions'));
+                    batch.set(newDocRef, installmentTransaction);
+                }
+                
+                await batch.commit();
+            }
+            
+            async handleCategorySubmit(e) { /* ... (código inalterado com userId) */ 
+                e.preventDefault();
+                const categoryName = document.getElementById('category-name').value.trim();
+                if (!categoryName) {
+                    this.showError('Informe o nome da categoria');
+                    return;
+                }
+                try {
+                    await addDoc(collection(this.db, 'financeflow-categories'), {
+                        name: categoryName,
+                        userId: this.userId,
+                        createdAt: new Date().toISOString()
+                    });
+                    this.hideCategoryModal();
+                    this.showSuccess('Categoria criada com sucesso!');
+                } catch (error) {
+                    console.error('Erro ao criar categoria:', error);
+                    this.showError('Erro ao criar categoria');
+                }
+            }
+            
+            async handleCardSubmit(e) { /* ... (código inalterado com userId) */ 
+                e.preventDefault();
+                const cardName = document.getElementById('card-name').value.trim();
+                const closingDay = parseInt(document.getElementById('card-closing-day').value);
+                const limit = parseFloat(document.getElementById('card-limit').value) || 0;
+                
+                if (!cardName || !closingDay || closingDay < 1 || closingDay > 31) {
+                    this.showError('Preencha todos os campos corretamente');
+                    return;
+                }
+                
+                try {
+                    await addDoc(collection(this.db, 'financeflow-cards'), {
+                        name: cardName,
+                        closingDay,
+                        limit,
+                        userId: this.userId,
+                        createdAt: new Date().toISOString()
+                    });
+                    this.hideCardModal();
+                    this.showSuccess('Cartão adicionado com sucesso!');
+                } catch (error) {
+                    console.error('Erro ao adicionar cartão:', error);
+                    this.showError('Erro ao adicionar cartão');
+                }
+            }
+            
+            // [NOVO] Adiciona uma nova transação recorrente
+            async handleRecurringSubmit(e) {
+                e.preventDefault();
+                
+                const description = document.getElementById('recurring-description').value.trim();
+                const amount = parseFloat(document.getElementById('recurring-amount').value);
+                const dayOfMonth = parseInt(document.getElementById('recurring-day').value);
+                const type = document.getElementById('recurring-type').value;
+                const categoryId = document.getElementById('recurring-category').value;
+                
+                if (!description || !amount || !dayOfMonth || !categoryId || dayOfMonth < 1 || dayOfMonth > 31) {
+                    this.showError('Preencha todos os campos corretamente');
+                    return;
+                }
+                
+                try {
+                    await addDoc(collection(this.db, 'financeflow-recurring'), {
+                        description,
+                        amount,
+                        dayOfMonth,
+                        type,
+                        categoryId,
+                        userId: this.userId,
+                        createdAt: new Date().toISOString(),
+                        lastPosted: null // Inicia como nulo
+                    });
+                    
+                    this.showSuccess('Transação recorrente adicionada!');
+                    document.getElementById('recurring-form').reset();
+
+                } catch (error) {
+                    console.error('Erro ao adicionar recorrente:', error);
+                    this.showError('Erro ao adicionar recorrente');
                 }
             }
 
-            // [NOVO] Prepara o modal para edição
-            handleEditTransaction(id) {
-                const tx = this.transactions.find(t => t.id === id);
-                if (!tx) return;
+            // [NOVO] Executa o lançamento das transações recorrentes pendentes
+            async handlePostRecurring() {
+                const btn = document.getElementById('post-recurring-btn');
+                btn.disabled = true;
+                btn.textContent = 'Processando...';
 
-                this.editingTransactionId = id;
+                try {
+                    const today = new Date();
+                    const currentDay = today.getDate();
+                    const currentMonth = today.getMonth();
+                    const currentYear = today.getFullYear();
+                    
+                    const batch = writeBatch(this.db);
+                    let itemsPosted = 0;
+                    
+                    for (const item of this.recurring) {
+                        // 1. Verifica se está na data
+                        if (item.dayOfMonth > currentDay) {
+                            continue; // Ainda não venceu
+                        }
 
-                // Preenche o formulário
-                document.getElementById('transaction-description').value = tx.description;
-                document.getElementById('transaction-amount').value = tx.amount;
-                document.getElementById('transaction-date').value = tx.date;
-                document.getElementById('transaction-type').value = tx.type;
-                document.getElementById('transaction-category').value = tx.categoryId;
-                
-                // Dispara o change event para mostrar/esconder o container de pagamento
-                this.handleTransactionTypeChange({ target: document.getElementById('transaction-type') });
-                
-                document.getElementById('transaction-payment-method').value = tx.creditCardId ? tx.creditCardId : 'conta';
+                        // 2. Verifica se já foi postado este mês
+                        let alreadyPosted = false;
+                        if (item.lastPosted) {
+                            const lastPostedDate = new Date(item.lastPosted);
+                            if (lastPostedDate.getMonth() === currentMonth && lastPostedDate.getFullYear() === currentYear) {
+                                alreadyPosted = true;
+                            }
+                        }
 
-                // Dispara o change event para mostrar/esconder parcelas (mas desabilita)
-                this.handlePaymentMethodChange({ target: document.getElementById('transaction-payment-method') });
-                
-                // Desabilita a edição de parcelas
-                document.getElementById('installments-container').classList.add('hidden'); // Oculta em vez de só desabilitar
-                document.getElementById('transaction-installments').disabled = true;
-                
-                // Muda o texto do modal
-                document.getElementById('transaction-modal-title').textContent = 'Editar Transação';
-                document.getElementById('transaction-submit-btn').textContent = 'Salvar Alterações';
+                        if (alreadyPosted) {
+                            continue; // Já postado
+                        }
 
-                this.showTransactionModal();
+                        // Se chegou aqui, deve ser postado
+                        itemsPosted++;
+                        
+                        // 3. Prepara a nova transação
+                        const newTransaction = {
+                            description: item.description,
+                            amount: item.amount,
+                            type: item.type,
+                            categoryId: item.categoryId,
+                            userId: this.userId,
+                            date: today.toISOString().split('T')[0], // Lança com a data de hoje
+                            createdAt: new Date().toISOString(),
+                            creditCardId: null // Recorrentes não são lançadas no cartão por padrão
+                        };
+                        
+                        const newTransRef = doc(collection(this.db, 'financeflow-transactions'));
+                        batch.set(newTransRef, newTransaction);
+                        
+                        // 4. Prepara a atualização do item recorrente
+                        const recurringRef = doc(this.db, 'financeflow-recurring', item.id);
+                        batch.update(recurringRef, { lastPosted: today.toISOString() });
+                    }
+
+                    if (itemsPosted === 0) {
+                        this.showSuccess('Nenhuma transação recorrente pendente.');
+                    } else {
+                        await batch.commit();
+                        this.showSuccess(`${itemsPosted} transação(ões) recorrente(s) lançada(s)!`);
+                    }
+
+                } catch (error) {
+                    console.error('Erro ao lançar recorrentes:', error);
+                    this.showError('Erro ao lançar recorrentes');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = `
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Lançar Recorrentes Pendentes
+                    `;
+                }
             }
-            
-            async createInstallments(transactionData, installments) { /* ... (código inalterado) */ }
-            async handleCategorySubmit(e) { /* ... (código inalterado) */ }
-            async handleCardSubmit(e) { /* ... (código inalterado) */ }
-            async handleRecurringSubmit(e) { /* ... (código inalterado) */ }
-            async handlePostRecurring() { /* ... (código inalterado) */ }
             
             handleTransactionTypeChange(e) { /* ... (código inalterado) */ 
                 const isExpense = e.target.value === 'despesa';
@@ -1251,46 +1462,145 @@
                 } else {
                     paymentMethodContainer.style.display = 'none';
                     document.getElementById('transaction-payment-method').value = 'conta';
-                    if (!this.editingTransactionId) { // Só mexe em parcelas se não estiver editando
-                        document.getElementById('installments-container').classList.add('hidden');
-                    }
+                    document.getElementById('installments-container').classList.add('hidden');
                 }
             }
             
-            handlePaymentMethodChange(e) {
+            handlePaymentMethodChange(e) { /* ... (código inalterado) */ 
                 const isCreditCard = e.target.value !== 'conta';
                 const isExpense = document.getElementById('transaction-type').value === 'despesa';
                 const installmentsContainer = document.getElementById('installments-container');
                 
-                // [MUDANÇA] Só mostra parcelas se for ADIÇÃO
-                if (isCreditCard && isExpense && !this.editingTransactionId) {
+                if (isCreditCard && isExpense) {
                     installmentsContainer.classList.remove('hidden');
-                    document.getElementById('transaction-installments').disabled = false;
                 } else {
                     installmentsContainer.classList.add('hidden');
-                    document.getElementById('transaction-installments').disabled = true;
                     document.getElementById('transaction-installments').value = 1;
                 }
             }
             
-            async deleteTransaction(id) { /* ... (código inalterado) */ }
-            async deleteCategory(id) { /* ... (código inalterado) */ }
-            async deleteCard(id) { /* ... (código inalterado) */ }
-            async deleteRecurring(id) { /* ... (código inalterado) */ }
+            async deleteTransaction(id) { /* ... (código inalterado) */ 
+                if (!confirm('Remover esta transação?')) return;
+                try {
+                    await deleteDoc(doc(this.db, 'financeflow-transactions', id));
+                    this.showSuccess('Transação removida!');
+                } catch (error) {
+                    console.error('Erro ao remover transação:', error);
+                    this.showError('Erro ao remover transação');
+                }
+            }
             
-            formatCurrency(value) { /* ... (código inalterado) */ }
-            formatDate(date) { /* ... (código inalterado) */ }
-            changeMonth(direction) { /* ... (código inalterado) */ }
-            exportData() { /* ... (código inalterado) */ }
+            async deleteCategory(id) { /* ... (código inalterado com verificação) */ 
+                if (!confirm('Remover esta categoria?')) return;
+                
+                const isUsedTransaction = this.transactions.some(t => t.categoryId === id);
+                const isUsedRecurring = this.recurring.some(r => r.categoryId === id); // [NOVO] Verifica recorrentes
+                
+                if (isUsedTransaction || isUsedRecurring) {
+                    this.showError('Não é possível remover. Categoria em uso por transações ou recorrentes.');
+                    return;
+                }
+
+                try {
+                    await deleteDoc(doc(this.db, 'financeflow-categories', id));
+                    this.showSuccess('Categoria removida!');
+                } catch (error) {
+                    console.error('Erro ao remover categoria:', error);
+                    this.showError('Erro ao remover categoria');
+                }
+            }
             
-            showAuthModal() { /* ... (código inalterado) */ }
-            hideAuthModal() { /* ... (código inalterado) */ }
-            showApp() { /* ... (código inalterado) */ }
-            hideLoading() { /* ... (código inalterado) */ }
+            async deleteCard(id) { /* ... (código inalterado com verificação) */ 
+                if (!confirm('Remover este cartão?')) return;
+                
+                const isUsed = this.transactions.some(t => t.creditCardId === id);
+                if (isUsed) {
+                    this.showError('Não é possível remover. Cartão em uso por transações.');
+                    return;
+                }
+
+                try {
+                    await deleteDoc(doc(this.db, 'financeflow-cards', id));
+                    this.showSuccess('Cartão removido!');
+                } catch (error) {
+                    console.error('Erro ao remover cartão:', error);
+                    this.showError('Erro ao remover cartão');
+                }
+            }
+
+            // [NOVO] Deleta um item recorrente
+            async deleteRecurring(id) {
+                if (!confirm('Remover este item recorrente?')) return;
+                
+                try {
+                    await deleteDoc(doc(this.db, 'financeflow-recurring', id));
+                    this.showSuccess('Item recorrente removido!');
+                } catch (error) {
+                    console.error('Erro ao remover item recorrente:', error);
+                    this.showError('Erro ao remover item recorrente');
+                }
+            }
             
-            showError(message) { /* ... (código inalterado) */ }
-            showSuccess(message) { /* ... (código inalterado) */ }
-            showNotification(message, type = 'info') { /* ... (código inalterado) */ }
+            formatCurrency(value) { /* ... (código inalterado) */ return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0); }
+            formatDate(date) { /* ... (código inalterado) */ return new Intl.DateTimeFormat('pt-BR').format(new Date(date + 'T00:00:00')); }
+            changeMonth(direction) { /* ... (código inalterado) */ this.currentDate.setMonth(this.currentDate.getMonth() + direction); this.updateDashboard(); }
+            
+            exportData() {
+                // [MUDANÇA] Adiciona recorrentes ao export
+                const data = {
+                    transactions: this.transactions,
+                    categories: this.categories,
+                    cards: this.cards,
+                    recurring: this.recurring,
+                    exportDate: new Date().toISOString()
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `financeflow-export-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.showSuccess('Dados exportados!');
+            }
+            
+            showAuthModal() { /* ... (código inalterado) */ document.getElementById('auth-modal').classList.add('show'); }
+            hideAuthModal() { /* ... (código inalterado) */ document.getElementById('auth-modal').classList.remove('show'); }
+            showApp() { /* ... (código inalterado) */ document.getElementById('app').classList.remove('hidden'); }
+            hideLoading() { /* ... (código inalterado) */ const overlay = document.getElementById('loading-overlay'); if (overlay) { overlay.style.opacity = '0'; setTimeout(() => { overlay.style.display = 'none'; }, 300); } }
+            
+            showError(message) { /* ... (código inalterado) */ this.showNotification(message, 'error'); }
+            showSuccess(message) { /* ... (código inalterado) */ this.showNotification(message, 'success'); }
+            
+            showNotification(message, type = 'info') {
+                // ... (código inalterado)
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 z-[1001] p-4 rounded-lg shadow-lg max-w-sm transform translate-x-full transition-transform duration-300 ${
+                    type === 'error' ? 'bg-red-600 text-white' :
+                    type === 'success' ? 'bg-green-600 text-white' :
+                    'bg-blue-600 text-white'
+                }`;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(0)';
+                }, 100);
+                
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(110%)';
+                    setTimeout(() => {
+                        if (document.body.contains(notification)) {
+                            document.body.removeChild(notification);
+                        }
+                    }, 300);
+                }, 3000);
+            }
         }
         
         new FinanceFlowV2();
